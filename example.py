@@ -69,7 +69,29 @@ def validate_lib():
     assert( round(pt.KS(df_mixed, 'Heart Disease', 'Sex', 1, 0),1) == 0.1 ) # was giving 0.10000000000000009, round to get the correct value
     del df_mixed
 
+    # CDDL, should return 1 
+    # +1: when there no rejections in facet a or subgroup and no acceptances in facet d or subgroup
+    d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
+        'Result':   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,],
+        'dummy':    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}
+    dfs = pd.DataFrame(data=d)
+    assert(pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 1)
 
+    # CDDL, should return 1 as there's no result=0 in the facet a (1). Dummy is inserted here as I don't want to create a correlated value for examples
+    # Positive values indicate there is a demographic disparity as facet d or subgroup has a greater proportion of the rejected outcomes in the dataset than of the accepted outcomes. The higher the value the less favored the facet and the greater the disparity.
+    d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
+        'Result':   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,],
+        'dummy':    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}
+    dfs = pd.DataFrame(data=d)
+    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 0.5494505494505494)
+
+    # CDDL, should return 1 as there's no result=0 in the facet a (1). Dummy is inserted here as I don't want to create a correlated value for examples
+    # Positive values indicate there is a demographic disparity as facet d or subgroup has a greater proportion of the rejected outcomes in the dataset than of the accepted outcomes. The higher the value the less favored the facet and the greater the disparity.
+    d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
+        'Result':   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
+        'dummy':    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}
+    dfs = pd.DataFrame(data=d)
+    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == -0.6666666666666667)
 
 # def main():
 #     df = pd.read_csv("preprocessado.csv")
