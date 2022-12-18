@@ -77,7 +77,6 @@ def validate_lib():
     dfs = pd.DataFrame(data=d)
     assert(pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 1)
 
-    # CDDL, should return 1 as there's no result=0 in the facet a (1). Dummy is inserted here as I don't want to create a correlated value for examples
     # Positive values indicate there is a demographic disparity as facet d or subgroup has a greater proportion of the rejected outcomes in the dataset than of the accepted outcomes. The higher the value the less favored the facet and the greater the disparity.
     d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
         'Result':   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,],
@@ -88,10 +87,38 @@ def validate_lib():
     # CDDL, should return 1 as there's no result=0 in the facet a (1). Dummy is inserted here as I don't want to create a correlated value for examples
     # Positive values indicate there is a demographic disparity as facet d or subgroup has a greater proportion of the rejected outcomes in the dataset than of the accepted outcomes. The higher the value the less favored the facet and the greater the disparity.
     d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
-        'Result':   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
+        'Result':   [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
         'dummy':    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}
     dfs = pd.DataFrame(data=d)
-    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == -0.6666666666666667)
+    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 1.0)
+
+    d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
+        'Result':   [1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+        'dummy':    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}
+    dfs = pd.DataFrame(data=d)
+    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 0 )
+
+    
+    d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
+        'Result':   [1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0],
+        'dummy':    [1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0]}
+    dfs = pd.DataFrame(data=d)
+    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 0 )
+
+    d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
+         'Result':  [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
+         'dummy':   [1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0]}
+    dfs = pd.DataFrame(data=d)
+    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 1.0 )
+
+    d = {'Sex':     [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0], 
+        'Result':   [1,1,1,1,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,1],
+        'dummy':    [1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0]}
+
+    # example from work 
+    dfs = pd.DataFrame(data=d)
+    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 0.23809523809523808 )
+
 
 # def main():
 #     df = pd.read_csv("preprocessado.csv")

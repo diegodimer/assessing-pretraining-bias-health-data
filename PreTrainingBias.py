@@ -109,41 +109,18 @@ class PreTrainingBias():
         return ks_val
 
     def CDDL(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, unprivileged_group, group_variable) -> float:
-        #sensitive_facet_index = grupo não privilegiado
         unique_groups = np.unique(df[group_variable])
         CDD = np.array([])
         counts = np.array([])
         for subgroup_variable in unique_groups:
             counts = np.append(counts, (df[group_variable].values == subgroup_variable).sum())
             numA = len (df[(df[target]==positive_outcome) & (df[protected_attribute]==unprivileged_group) & (df[group_variable] == subgroup_variable)]) 
-                   # len(feature[label_index & sensitive_facet_index & (group_variable == subgroup_variable)])
             denomA = len (df[(df[target]==positive_outcome) & (df[group_variable] == subgroup_variable)])
-            #len(feature[label_index & (group_variable == subgroup_variable)])
             A = numA / denomA if denomA != 0 else 0
             numD =  len (df[(df[target]!=positive_outcome) & (df[protected_attribute]==unprivileged_group) & (df[group_variable] == subgroup_variable)])
-            # len(feature[(~label_index) & sensitive_facet_index & (group_variable == subgroup_variable)])
             denomD =  len (df[(df[target]!=positive_outcome) & (df[group_variable] == subgroup_variable)])
-            # len(feature[(~label_index) & (group_variable == subgroup_variable)])
             D = numD / denomD if denomD != 0 else 0
             CDD = np.append(CDD, D - A)
         return self._divide(np.sum(counts * CDD), np.sum(counts))
 
-    # def DPPL(self, df, label, target_label, target_value, threshold=None):
-    #     facet_counts = df[label].value_counts(sort=True)
-    #     if (len(facet_counts) == 2):
-    #         num_facet_adv = facet_counts.values[0]
-    #         num_facet_disadv = facet_counts.values[1]
-    #     else:
-    #         if threshold == None:
-    #             raise Exception("Threshold not defined")
-    #         aux = len(df[df[label] > threshold])
-    #         num_facet_adv = max(aux)
-    #         num_facet_disadv = min(aux)
-
-    #     num_facet_and_pos_label = df[label].where(
-    #         df[target_label] == target_value).value_counts(sort=True)
-    #     num_facet_and_pos_label_adv = num_facet_and_pos_label.values[0]
-    #     num_facet_and_pos_label_disadv = num_facet_and_pos_label.values[1]
-    #     q_a = num_facet_and_pos_label_adv / num_facet_adv
-    #     q_d = num_facet_and_pos_label_disadv / num_facet_disadv
-    #     return self._difference_in_positive_proportions_of_labels(q_a, q_d)
+    
