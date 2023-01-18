@@ -119,15 +119,9 @@ def validate_lib():
     dfs = pd.DataFrame(data=d)
     assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 0.23809523809523808 )
 
-
-# def main():
-#     df = pd.read_csv("preprocessado.csv")
-   
-#     pt = PreTrainingBias()
-#     dic = pt.global_evaluation(df, "Risk", "alcohol_binge=4", 1)
-#     print(dic)
-#     # print(pt.class_imbalance(df, "Age", 50)) ## data imbalance
-#     print(pt.class_imbalance(df, "age"))
+    from alcohol_dataset import AlcoholDataset, load_preproc_data_alcohol
+    df = load_preproc_data_alcohol();
+    print(pt.CDDL(df, 'Risk', 1, 'cotas', True, 'Age'))
 
 if __name__ == "__main__":
     validate_lib()
