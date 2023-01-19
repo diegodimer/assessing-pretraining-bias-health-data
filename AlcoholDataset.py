@@ -2,21 +2,21 @@ from BaseDataset import BaseDataset
 import pandas as pd
 
 class AlcoholDataset(BaseDataset):
+    def __init__(self):
+        self.dataset = self.custom_preprocessing(pd.read_csv("datasets/banco_flavia.csv"))
+        self.predicted_attr = "phq_diagnosis"
+        self.max_iter = 1000
+        self.n_estimators = 40
+        self.random_state = 12
+        self.max_depth = 20
+        self.n_neighbors = 296
+        self.criterion = 'entropy'
+        super().__init__()
+        
     def run(self):
-        dataset = self.custom_preprocessing(pd.read_csv("datasets/banco_flavia.csv"))
-        predicted_attr = "Risk_Stratification"
-        return super()._run(dataset, predicted_attr)
+        return super()._run()
 
     def custom_preprocessing(self, df):
-        def age_group(x):
-            if x <= 20:
-                return 0 #'<=20'
-            elif x > 20 and x <= 25:
-                return 1 #'>20, <=25'
-            elif x > 25 and x <= 30:
-                return 2 # '>25, <=30'
-            else:
-                return 3 #'>30, <=35'
 
         # 1 -> Feminino
         # 2 -> Masculino
@@ -26,11 +26,24 @@ class AlcoholDataset(BaseDataset):
             else:
                 return 1
 
-        # df['age'] = df['age'].apply(lambda x: age_group(x))
-
         df['Risk_Stratification'] = df.apply(lambda x: risk_labels(
             x.Risk_Stratification, x.gender), axis=1)
-
+    
+        df = df.drop('year', axis=1) 
+        df = df.drop('gender_id', axis=1) 
+        df = df.drop('alcohol_dose', axis=1)
+        df = df.drop('alcohol_binge', axis=1)
+        df = df.drop('Audit_Total', axis=1)
+        # df = df.drop('Risk_Stratification', axis=1)
+        df = df.drop('suicidal_attempt', axis=1)
+        df = df.drop('phq_1', axis=1)
+        df = df.drop('phq_2', axis=1)
+        df = df.drop('phq_total', axis=1)
+        df = df.drop('suicide_ideation_month', axis=1)
+        df = df.drop('bullying_yes', axis=1)
+        df = df.drop('family_income', axis=1)
+        df = df.drop_duplicates()
+    
         return df
 
 h = AlcoholDataset()
