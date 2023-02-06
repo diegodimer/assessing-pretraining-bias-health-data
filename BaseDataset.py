@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix,accuracy_score,classification_report, f1_score
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+from PreTrainingBias import PreTrainingBias
 
 class BaseDataset():
     dataset         = None
@@ -22,9 +24,18 @@ class BaseDataset():
     max_depth       = None
     n_neighbors     = None
     criterion       = None
-
+    positive_outcome = None
+    negative_outcome = None
+    
+    def __init__(self) -> None:
+        self.ptb = PreTrainingBias()
+    
     def _run(self): 
-        pp.ProfileReport(self.dataset).to_file(f"{type(self).__name__}.html")
+        my_file = Path(f"{type(self).__name__}.html")
+
+        if not my_file.exists():
+            pp.ProfileReport(self.dataset).to_file(f"{type(self).__name__}.html")
+
         y = self.dataset[self.predicted_attr]
         X = self.dataset.drop(self.predicted_attr,axis=1)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.20, random_state = 0)
@@ -55,6 +66,9 @@ class BaseDataset():
         print(f"F1 Score of {model_name}: {model_f1_score*100}\n" )
         # print(classification_report(y_test,model_predicted))
 
+    def evaluate_metrics(self, protected_attribute, privileged_group, unprivileged_group, group_variable):
+        return self.ptb.global_evaluation (self.dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, unprivileged_group, group_variable)
+        
     def best_neighbors_finder(self):
         y = self.dataset[self.predicted_attr]
         X = self.dataset.drop(self.predicted_attr,axis=1)
@@ -88,3 +102,41 @@ class BaseDataset():
         print("Minimum error:-",min(error_rate),"at K =",req_k_value)
         print("Maximum acc:-",max(accuracy),"at K =",req_acc_value)
         print("maximum f1:-",max(f1),"at K =",req_f1_value)
+
+    def gen_graph(self,protected_attr, labels_labels = None, outcomes_labels = None):
+        labels = self.dataset[protected_attr].unique().tolist()
+        labels.sort()
+        outcomes = self.dataset[self.predicted_attr].unique().tolist()
+        outcomes.sort()
+
+        bar_ind = []
+        bar_list = []
+        for i in outcomes:
+            for j in labels:
+                bar_ind.append(len(self.dataset[ (self.dataset[self.predicted_attr] == i) & (self.dataset[protected_attr] == j) ]))
+            bar_list.append(bar_ind)
+            bar_ind = []
+
+        width = 0.35       # the width of the bars: can also be len(x) sequence
+        fig, ax = plt.subplots()
+        previous = []
+        for i,j in enumerate(bar_list):
+            if i == 0:
+                ax.bar(labels, j, width, label=f'{i}')
+            if i!=0:
+                ax.bar(labels, j, width, label=f'{i}', bottom=previous)
+            previous = j
+        plt.figure(figsize=(20,12))
+        if labels_labels is not None:
+            x_ticks_labels = labels_labels
+            ax.set_xticks(labels)
+            ax.set_xticklabels(x_ticks_labels)
+        if outcomes_labels is not None:
+            y_ticks_labels = outcomes_labels
+            ax.set_yticks(outcomes)
+            ax.set_yticklabels(y_ticks_labels)
+        ax.set_ylabel('count')
+        ax.legend(title="Target")
+        # for bars in ax.containers: ## if the bars should have the values
+        #     ax.bar_label(bars)
+        fig.savefig(f"{type(self).__name__}-{protected_attr}.png")

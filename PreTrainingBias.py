@@ -26,51 +26,6 @@ class PreTrainingBias():
             return Infinity
         return a / b
 
-    # def global_evaluation(self, df, target, correlated_attr_name, label_values_or_threshold):
-    #     analysis = {"Class Imbalance": {}, "DPPL": {},
-    #                 "KL Divergence": {}, "CDDL": {}}
-
-    #     binary_attrs = []
-
-    #     for i in df.columns:
-    #         facet_counts = df[i].value_counts(sort=True)
-    #         if (len(facet_counts) == 2) and i != target:
-    #             binary_attrs.append(i)
-    #             # print(f"{i} is a binary attribute. {facet_counts.index[0]} is the dominating with {facet_counts.values[0]} records over {facet_counts.index[1]} with {facet_counts.values[1]}")
-
-    #             # class imbalance
-    #             analysis["Class Imbalance"][i] = self._class_imbalance(
-    #                 facet_counts.values[0], facet_counts.values[1])
-
-    #             # Difference in Positive Proportions in Labels (DPPL)
-    #             num_facet_and_pos_label = df[i].where(
-    #                 df[target] == label_values_or_threshold).value_counts(sort=True)
-    #             num_facet_and_pos_label_adv = num_facet_and_pos_label.values[0]
-    #             num_facet_and_pos_label_disadv = num_facet_and_pos_label.values[1]
-    #             num_facet_adv = facet_counts.values[0]
-    #             num_facet_disadv = facet_counts.values[1]
-    #             q_a = num_facet_and_pos_label_adv / num_facet_adv
-    #             q_d = num_facet_and_pos_label_disadv / num_facet_disadv
-    #             analysis["DPPL"][i] = self._difference_in_positive_proportions_of_labels(
-    #                 q_a, q_d)
-
-    #             # KL Divergence
-    #             label = df[target]
-    #             sensitive_facet_index = df[i] == facet_counts.index[1]
-    #             (Pa, Pd) = pdfs_aligned_nonzero(
-    #                 label[~sensitive_facet_index], label[sensitive_facet_index])
-    #             analysis["KL Divergence"][i] = self._kl_divergence(Pa, Pd)
-
-    #             # CDDL - Conditional Demographic Disparity in Labels
-    #             feature = df[i]  # a variavel binaria que to analisando
-    #             sensitive_facet_index = df[i] == facet_counts.index[1]
-    #             positive_label_index = df[target] == label_values_or_threshold
-    #             group_variable = df[correlated_attr_name]  # Age pro example
-    #             analysis["CDDL"][i] = self._CDDL(
-    #                 feature, sensitive_facet_index, positive_label_index, group_variable)
-
-    #     return analysis
-
     def class_imbalance(self, df, label, threshold=None):
         facet_counts = df[label].value_counts(sort=True)
         if (len(facet_counts) == 2):
@@ -122,5 +77,14 @@ class PreTrainingBias():
             D = numD / denomD if denomD != 0 else 0
             CDD = np.append(CDD, D - A)
         return self._divide(np.sum(counts * CDD), np.sum(counts))
+
+    def global_evaluation(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, privileged_group, unprivileged_group, group_variable):
+        dic = {
+            "Class Imbalance": self.class_imbalance_per_label(df, target, privileged_group, unprivileged_group),
+            "KL Divergence": self.KL_divergence(df, target, protected_attribute, privileged_group, unprivileged_group),
+            "KS": self.KS(df, target, protected_attribute, privileged_group, unprivileged_group),
+            "CDDL": self.CDDL(df, target, positive_outcome, protected_attribute, unprivileged_group, group_variable)
+        }
+        return dic
 
     

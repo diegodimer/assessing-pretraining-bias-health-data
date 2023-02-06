@@ -119,9 +119,6 @@ def validate_lib():
     dfs = pd.DataFrame(data=d)
     assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 0, 'dummy') == 0.23809523809523808 )
 
-    from alcohol_dataset import AlcoholDataset, load_preproc_data_alcohol
-    df = load_preproc_data_alcohol();
-    print(pt.CDDL(df, 'Risk', 1, 'cotas', True, 'Age'))
 
 if __name__ == "__main__":
     validate_lib()

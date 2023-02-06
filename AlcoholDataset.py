@@ -11,6 +11,8 @@ class AlcoholDataset(BaseDataset):
         self.max_depth = 20
         self.n_neighbors = 296
         self.criterion = 'entropy'
+        self.positive_outcome = 0
+        self.negative_outcome = 1
         super().__init__()
         
     def run(self):
@@ -34,7 +36,7 @@ class AlcoholDataset(BaseDataset):
         df = df.drop('alcohol_dose', axis=1)
         df = df.drop('alcohol_binge', axis=1)
         df = df.drop('Audit_Total', axis=1)
-        # df = df.drop('Risk_Stratification', axis=1)
+        df = df.drop('Risk_Stratification', axis=1)
         df = df.drop('suicidal_attempt', axis=1)
         df = df.drop('phq_1', axis=1)
         df = df.drop('phq_2', axis=1)
