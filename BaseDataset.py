@@ -76,7 +76,7 @@ class BaseDataset():
         accuracy = []
         f1 = []
         error_rate = []
-        max_n = 300#self.X_train.shape[0] + 1
+        max_n = self.X_train.shape[0] + 1
         for i in range(1,max_n):
             model = KNeighborsClassifier(n_neighbors=i)
             model.fit(self.X_train,self.y_train)
@@ -137,6 +137,6 @@ class BaseDataset():
             ax.set_yticklabels(y_ticks_labels)
         ax.set_ylabel('count')
         ax.legend(title="Target")
-        # for bars in ax.containers: ## if the bars should have the values
-        #     ax.bar_label(bars)
+        for bars in ax.containers: ## if the bars should have the values
+            ax.bar_label(bars)
         fig.savefig(f"{type(self).__name__}-{protected_attr}.png")

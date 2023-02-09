@@ -8,9 +8,9 @@ class HeartDataset(BaseDataset):
         self.predicted_attr = "target"
         self.max_iter = 1000
         self.n_estimators = 20
-        self.random_state = 12
-        self.max_depth = 10
-        self.n_neighbors = 39
+        self.random_state = 0
+        self.max_depth = 7
+        self.n_neighbors = 42
         self.criterion = 'entropy'
         self.positive_outcome = 0
         super().__init__()
@@ -75,5 +75,6 @@ class HeartDataset(BaseDataset):
 
 h = HeartDataset()
 h.run()
-print(h.evaluate_metrics('sex', 1, 0, 'age'))
+print(h.evaluate_metrics('sex', 1, 0, 'cp'))
 h.gen_graph('sex', labels_labels = ["Female", "Male"] )
+h.best_neighbors_finder()
