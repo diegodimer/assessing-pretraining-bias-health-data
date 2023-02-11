@@ -26,6 +26,7 @@ class BaseDataset():
     criterion       = None
     positive_outcome = None
     negative_outcome = None
+    model_predicted = None
     
     def __init__(self) -> None:
         self.ptb = PreTrainingBias()
@@ -57,14 +58,14 @@ class BaseDataset():
     def run_model(self, model):
         model_name = type(model).__name__
         model.fit(self.X_train,self.y_train)
-        model_predicted = model.predict(self.X_test)
-        model_conf_matrix = confusion_matrix(self.y_test, model_predicted)
-        model_acc_score = accuracy_score(self.y_test, model_predicted)
-        model_f1_score = f1_score(self.y_test,model_predicted)
+        self.model_predicted = model.predict(self.X_test)
+        model_conf_matrix = confusion_matrix(self.y_test, self.model_predicted)
+        model_acc_score = accuracy_score(self.y_test, self.model_predicted)
+        model_f1_score = f1_score(self.y_test,self.model_predicted)
         print(f"confussion matrix for {model_name}: \n{model_conf_matrix}")
         print(f"Accuracy of {model_name}: {model_acc_score*100}")
         print(f"F1 Score of {model_name}: {model_f1_score*100}\n" )
-        # print(classification_report(y_test,model_predicted))
+        # print(classification_report(self.y_test,self.model_predicted))
 
     def evaluate_metrics(self, protected_attribute, privileged_group, unprivileged_group, group_variable):
         return self.ptb.global_evaluation (self.dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, unprivileged_group, group_variable)
@@ -80,11 +81,11 @@ class BaseDataset():
         for i in range(1,max_n):
             model = KNeighborsClassifier(n_neighbors=i)
             model.fit(self.X_train,self.y_train)
-            model_predicted = model.predict(self.X_test)
+            self.model_predicted = model.predict(self.X_test)
 
-            model_acc_score = accuracy_score(self.y_test, model_predicted) 
-            model_f1_score = f1_score(self.y_test,model_predicted) 
-            error_rate.append(np.mean(model_predicted != self.y_test))
+            model_acc_score = accuracy_score(self.y_test, self.model_predicted) 
+            model_f1_score = f1_score(self.y_test,self.model_predicted) 
+            error_rate.append(np.mean(self.model_predicted != self.y_test))
             accuracy.append(model_acc_score)
             f1.append(model_f1_score)
 
@@ -103,40 +104,45 @@ class BaseDataset():
         print("Maximum acc:-",max(accuracy),"at K =",req_acc_value)
         print("maximum f1:-",max(f1),"at K =",req_f1_value)
 
-    def gen_graph(self,protected_attr, labels_labels = None, outcomes_labels = None):
-        labels = self.dataset[protected_attr].unique().tolist()
+    def gen_graph(self,protected_attr, labels_labels = None, outcomes_labels = None, dataset = None, predicted_attr = None):
+        if dataset is None:
+            dataset = self.dataset
+        if predicted_attr is None:
+            predicted_attr = self.predicted_attr
+            
+        labels = dataset[protected_attr].unique().tolist()
         labels.sort()
-        outcomes = self.dataset[self.predicted_attr].unique().tolist()
+        outcomes = dataset[predicted_attr].unique().tolist()
         outcomes.sort()
 
         bar_ind = []
         bar_list = []
         for i in outcomes:
             for j in labels:
-                bar_ind.append(len(self.dataset[ (self.dataset[self.predicted_attr] == i) & (self.dataset[protected_attr] == j) ]))
+                bar_ind.append(len(dataset[ (dataset[predicted_attr] == i) & (dataset[protected_attr] == j) ]))
             bar_list.append(bar_ind)
             bar_ind = []
 
         width = 0.35       # the width of the bars: can also be len(x) sequence
         fig, ax = plt.subplots()
-        previous = []
+        previous = None
         for i,j in enumerate(bar_list):
             if i == 0:
                 ax.bar(labels, j, width, label=f'{i}')
+                previous = np.array(j)
             if i!=0:
                 ax.bar(labels, j, width, label=f'{i}', bottom=previous)
-            previous = j
-        plt.figure(figsize=(20,12))
+                previous += np.array(j)
+        plt.figure(figsize=(40,24))
         if labels_labels is not None:
             x_ticks_labels = labels_labels
             ax.set_xticks(labels)
             ax.set_xticklabels(x_ticks_labels)
         if outcomes_labels is not None:
-            y_ticks_labels = outcomes_labels
-            ax.set_yticks(outcomes)
-            ax.set_yticklabels(y_ticks_labels)
+            ax.legend(outcomes_labels)
+        else:
+            ax.legend(title=predicted_attr)
         ax.set_ylabel('count')
-        ax.legend(title="Target")
         for bars in ax.containers: ## if the bars should have the values
             ax.bar_label(bars)
         fig.savefig(f"{type(self).__name__}-{protected_attr}.png")

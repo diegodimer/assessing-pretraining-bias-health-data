@@ -70,11 +70,22 @@ class HeartDataset(BaseDataset):
     #     # for bars in ax.containers: ## if the bars should have the values
     #     #     ax.bar_label(bars)
     #     fig.savefig('caterogizeage.png')
+
+    def result_checker(self):
+        df_out = self.X_test.reset_index()
+        y_hats  = pd.DataFrame(self.model_predicted)
+        df_out["Actual"] = self.y_test.reset_index()['target']
+        df_out["Prediction"] = y_hats.reset_index()[0]
+
+        df_err = df_out.loc[ df_out['Actual'] != df_out['Prediction']]
+        self.gen_graph('sex', dataset = df_err, predicted_attr = 'Prediction', labels_labels=['Female', 'Male'])
+
     
 
 
 h = HeartDataset()
 h.run()
-print(h.evaluate_metrics('sex', 1, 0, 'cp'))
-h.gen_graph('sex', labels_labels = ["Female", "Male"] )
-h.best_neighbors_finder()
+# print(h.evaluate_metrics('sex', 1, 0, 'cp'))
+# h.gen_graph('sex', labels_labels = ["Female", "Male"] )
+# h.best_neighbors_finder()
+h.result_checker()

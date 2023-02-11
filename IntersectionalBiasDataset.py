@@ -22,8 +22,9 @@ class IntersectionalBiasDataset(BaseDataset):
         def discretize_sex(x):
             if x == 'Female':
                 return 0
-            else:
+            elif x == 'Male':
                 return 1
+            else: raise
 
         def discretize_race(x):
             if x == 'Black':
@@ -59,4 +60,5 @@ class IntersectionalBiasDataset(BaseDataset):
 
 h = IntersectionalBiasDataset()
 h.run()
-print(h.evaluate_metrics('Sex', 1, 0, 'Race'))
+h.gen_graph('Sex', predicted_attr = 'Diagnosis', labels_labels=['Female', 'Male'])
+# print(h.evaluate_metrics('Sex', 1, 0, 'Race'))
