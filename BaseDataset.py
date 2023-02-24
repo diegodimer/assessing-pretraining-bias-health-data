@@ -1,6 +1,7 @@
 import pandas as pd
 import pandas_profiling as pp
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
@@ -10,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from PreTrainingBias import PreTrainingBias
-
+import graphviz
 class BaseDataset():
     dataset         = None
     predicted_attr  = None
@@ -27,6 +28,10 @@ class BaseDataset():
     positive_outcome = None
     negative_outcome = None
     model_predicted = None
+    lr = None
+    rf = None
+    dt = None
+    knn = None
     
     def __init__(self) -> None:
         self.ptb = PreTrainingBias()
@@ -45,15 +50,15 @@ class BaseDataset():
         print(self.y_train.value_counts())
 
         # models
-        lr = LogisticRegression(max_iter=self.max_iter)
-        rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state,max_depth=self.max_depth)
-        dt = DecisionTreeClassifier(criterion = 'entropy',random_state=self.random_state,max_depth=self.max_depth)
-        knn = KNeighborsClassifier(n_neighbors=self.n_neighbors)
+        self.lr = LogisticRegression(max_iter=self.max_iter)
+        self.rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state,max_depth=self.max_depth)
+        self.dt = DecisionTreeClassifier(criterion = 'entropy',random_state=self.random_state,max_depth=self.max_depth)
+        self.knn = KNeighborsClassifier(n_neighbors=self.n_neighbors)
 
-        self.run_model(lr)
-        self.run_model(rf)
-        self.run_model(dt)
-        self.run_model(knn)
+        self.run_model(self.lr)
+        self.run_model(self.rf)
+        self.run_model(self.dt)
+        self.run_model(self.knn)
 
     def run_model(self, model):
         model_name = type(model).__name__
@@ -146,3 +151,13 @@ class BaseDataset():
         for bars in ax.containers: ## if the bars should have the values
             ax.bar_label(bars)
         fig.savefig(f"{type(self).__name__}-{protected_attr}.png")
+
+    def save_tree(self):
+        dot_data = tree.export_graphviz(self.dt, out_file=None, 
+                            feature_names=self.X_train.columns,  
+                            class_names=[str(x) for x in self.y_test.unique()],  
+                            filled=True, rounded=True,  
+                            special_characters=True,impurity=False,max_depth=3)  
+        
+        graph = graphviz.Source(dot_data)  
+        graph.render(f"tree-{type(self).__name__}") 
