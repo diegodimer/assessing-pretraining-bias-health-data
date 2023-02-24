@@ -50,3 +50,4 @@ class AlcoholDataset(BaseDataset):
 
 h = AlcoholDataset()
 h.run()
+h.save_tree()
