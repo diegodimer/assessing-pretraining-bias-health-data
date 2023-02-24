@@ -1,3 +1,6 @@
-.html
-.png
-.pyc
+*.html
+*.png
+*.pyc
+*.pdf
+tree-*
+*.json
