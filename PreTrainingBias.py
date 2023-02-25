@@ -80,7 +80,7 @@ class PreTrainingBias():
 
     def global_evaluation(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, privileged_group, unprivileged_group, group_variable):
         dic = {
-            "Class Imbalance": self.class_imbalance_per_label(df, target, privileged_group, unprivileged_group),
+            f"Class Imbalance ({protected_attribute})": self.class_imbalance_per_label(df, protected_attribute, privileged_group, unprivileged_group),
             "KL Divergence": self.KL_divergence(df, target, protected_attribute, privileged_group, unprivileged_group),
             "KS": self.KS(df, target, protected_attribute, privileged_group, unprivileged_group),
             "CDDL": self.CDDL(df, target, positive_outcome, protected_attribute, unprivileged_group, group_variable)
