@@ -20,17 +20,20 @@ class AlcoholDataset(BaseDataset):
 
     def custom_preprocessing(self, df):
 
-        # 1 -> Feminino
-        # 2 -> Masculino
-        def risk_labels(risk, gender):
-            if risk <= 2 and gender == 1 or risk <= 3 and gender == 2:
-                return 0
-            else:
+        def marital_status(status): # maps single, single in a relationship, widow, divorced -> single
+            if status == 3: 
                 return 1
+            else: # single
+                return 0
+        
+        def children(num):
+            if num == 1:
+                return 0
+            elif num >= 2:
+                return 1
+            else: 
+                raise
 
-        df['Risk_Stratification'] = df.apply(lambda x: risk_labels(
-            x.Risk_Stratification, x.gender), axis=1)
-    
         df = df.drop('year', axis=1) 
         df = df.drop('gender_id', axis=1) 
         df = df.drop('alcohol_dose', axis=1)
@@ -38,6 +41,7 @@ class AlcoholDataset(BaseDataset):
         df = df.drop('Audit_Total', axis=1)
         df = df.drop('Risk_Stratification', axis=1)
         df = df.drop('suicidal_attempt', axis=1)
+        df = df.drop('suicide_attempt_dic', axis=1)
         df = df.drop('phq_1', axis=1)
         df = df.drop('phq_2', axis=1)
         df = df.drop('phq_total', axis=1)
@@ -45,9 +49,11 @@ class AlcoholDataset(BaseDataset):
         df = df.drop('bullying_yes', axis=1)
         df = df.drop('family_income', axis=1)
         df = df.drop_duplicates()
+        df['marital_status'] = df['marital_status'].apply(lambda x: marital_status(x))
+        df['children'] = df['children'].apply(lambda x: children(x))
     
         return df
 
 h = AlcoholDataset()
 h.run()
-h.save_tree()
+print(h.dataset['tobacco'].values_count)
