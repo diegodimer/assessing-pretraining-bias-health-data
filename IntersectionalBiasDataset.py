@@ -60,5 +60,7 @@ class IntersectionalBiasDataset(BaseDataset):
 
 h = IntersectionalBiasDataset()
 h.run()
-h.gen_graph('Sex', predicted_attr = 'Diagnosis', labels_labels=['Female', 'Male'])
-# print(h.evaluate_metrics('Sex', 1, 0, 'Race'))
+# h.evaluate_metrics('Sex', 1, 'Rumination')
+# h.evaluate_metrics('Sex', 1, 'Tension')
+# h.evaluate_metrics('Race', 1, 'Rumination')
+# h.evaluate_metrics('Race', 1, 'Tension')

@@ -31,3 +31,5 @@ class HeartDataset(BaseDataset):
 
 h = HeartDataset()
 h.run()
+# h.evaluate_metrics('sex', 1, 'cp')
+# h.evaluate_metrics('sex', 1, 'thal')

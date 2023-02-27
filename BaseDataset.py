@@ -32,7 +32,8 @@ class BaseDataset():
     rf = None
     dt = None
     knn = None
-    
+    accs = []
+    f1s = []
     def __init__(self) -> None:
         self.ptb = PreTrainingBias()
     
@@ -44,22 +45,25 @@ class BaseDataset():
 
         y = self.dataset[self.predicted_attr]
         X = self.dataset.drop(self.predicted_attr,axis=1)
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.20, random_state = 0)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.20, random_state = 0) # adicionar 10/5 repetições do split 
         
         print(self.y_test.value_counts())
         print(self.y_train.value_counts())
 
         # models
         self.lr = LogisticRegression(max_iter=self.max_iter)
-        self.rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state,max_depth=self.max_depth)
         self.dt = DecisionTreeClassifier(criterion = 'entropy',random_state=self.random_state,max_depth=self.max_depth)
+        self.rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state,max_depth=self.max_depth)
         self.knn = KNeighborsClassifier(n_neighbors=self.n_neighbors)
 
         self.run_model(self.lr)
-        self.run_model(self.rf)
         self.run_model(self.dt)
+        self.run_model(self.rf)
         self.run_model(self.knn)
-
+        for i in self.accs:
+            print(i)
+        for i in self.f1s:
+            print(i)
     def run_model(self, model):
         model_name = type(model).__name__
         model.fit(self.X_train,self.y_train)
@@ -67,14 +71,21 @@ class BaseDataset():
         model_conf_matrix = confusion_matrix(self.y_test, self.model_predicted)
         model_acc_score = accuracy_score(self.y_test, self.model_predicted)
         model_f1_score = f1_score(self.y_test,self.model_predicted)
-        print(f"confussion matrix for {model_name}: \n{model_conf_matrix}")
-        print(f"Accuracy of {model_name}: {model_acc_score*100}")
-        print(f"F1 Score of {model_name}: {model_f1_score*100}\n" )
+        model_acc = "{:.3f}".format(model_acc_score*100)
+        model_f1 = "{:.3f}".format(model_f1_score*100)
+        # print(f"confussion matrix for {model_name}: \n{model_conf_matrix}")
+        print(f"Accuracy of {model_name}: {model_acc}")
+        print(f"F1 Score of {model_name}: {model_f1}\n" )
+        self.accs.append(model_acc)
+        self.f1s.append(model_f1)
         # print(classification_report(self.y_test,self.model_predicted))
 
-    def evaluate_metrics(self, protected_attribute, privileged_group, unprivileged_group, group_variable):
-        return self.ptb.global_evaluation (self.dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, unprivileged_group, group_variable)
-        
+    def evaluate_metrics(self, protected_attribute, privileged_group, group_variable):
+        dic = self.ptb.global_evaluation (self.dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
+        for key in dic:
+            val = "{:.3f}".format(dic[key])
+            print("{: <50} {: >50}".format(key,val))
+    
     def best_neighbors_finder(self):
         y = self.dataset[self.predicted_attr]
         X = self.dataset.drop(self.predicted_attr,axis=1)

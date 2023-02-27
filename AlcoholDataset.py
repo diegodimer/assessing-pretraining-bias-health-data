@@ -56,4 +56,7 @@ class AlcoholDataset(BaseDataset):
 
 h = AlcoholDataset()
 h.run()
-print(h.dataset['tobacco'].values_count)
+# h.evaluate_metrics('gender', 2, 'Sleep')
+# h.evaluate_metrics('gender', 2, 'change_giveup')
+# h.evaluate_metrics('cotas', 1, 'change_giveup')
+# h.evaluate_metrics('cotas', 1, 'Sleep')

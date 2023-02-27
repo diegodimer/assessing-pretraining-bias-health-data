@@ -37,13 +37,13 @@ class PreTrainingBias():
             b = len(df[df[label] <= threshold])
             return self._class_imbalance(max(a, b), min(a, b))
 
-    def class_imbalance_per_label(self, df, label, privileged_group, unprivileged_group) -> float:
-        return self._class_imbalance((df[label].values == privileged_group).sum(), (df[label].values == unprivileged_group).sum())
+    def class_imbalance_per_label(self, df, label, privileged_group) -> float:
+        return self._class_imbalance((df[label].values == privileged_group).sum(), (df[label].values != privileged_group).sum())
 
-    def KL_divergence(self, df, target, protected_attribute: str, privileged_group, unprivileged_group) -> float:
+    def KL_divergence(self, df, target, protected_attribute: str, privileged_group) -> float:
         label = df[target]
         P_list = list()
-        sensitive_facet_index = df[protected_attribute] == unprivileged_group
+        sensitive_facet_index = df[protected_attribute] != privileged_group
         unsensitive_facet_index = df[protected_attribute] == privileged_group
         P_list = pdfs_aligned_nonzero(label[unsensitive_facet_index], label[sensitive_facet_index])
         ks_val = 0
@@ -52,10 +52,10 @@ class PreTrainingBias():
         return ks_val
     
     
-    def KS(self, df, target, protected_attribute: str, privileged_group, unprivileged_group) -> float:
+    def KS(self, df, target, protected_attribute: str, privileged_group) -> float:
         label = df[target]
         P_list = list()
-        sensitive_facet_index = df[protected_attribute] == unprivileged_group
+        sensitive_facet_index = df[protected_attribute] != privileged_group
         unsensitive_facet_index = df[protected_attribute] == privileged_group
         P_list = pdfs_aligned_nonzero(label[unsensitive_facet_index], label[sensitive_facet_index])
         ks_val = 0
@@ -63,27 +63,27 @@ class PreTrainingBias():
             ks_val = max(ks_val, abs(np.subtract(j,P_list[1][i])))
         return ks_val
 
-    def CDDL(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, unprivileged_group, group_variable) -> float:
+    def CDDL(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, privileged_group, group_variable) -> float:
         unique_groups = np.unique(df[group_variable])
         CDD = np.array([])
         counts = np.array([])
         for subgroup_variable in unique_groups:
             counts = np.append(counts, (df[group_variable].values == subgroup_variable).sum())
-            numA = len (df[(df[target]==positive_outcome) & (df[protected_attribute]==unprivileged_group) & (df[group_variable] == subgroup_variable)]) 
+            numA = len (df[(df[target]==positive_outcome) & (df[protected_attribute]!=privileged_group) & (df[group_variable] == subgroup_variable)]) 
             denomA = len (df[(df[target]==positive_outcome) & (df[group_variable] == subgroup_variable)])
             A = numA / denomA if denomA != 0 else 0
-            numD =  len (df[(df[target]!=positive_outcome) & (df[protected_attribute]==unprivileged_group) & (df[group_variable] == subgroup_variable)])
+            numD =  len (df[(df[target]!=positive_outcome) & (df[protected_attribute]!=privileged_group) & (df[group_variable] == subgroup_variable)])
             denomD =  len (df[(df[target]!=positive_outcome) & (df[group_variable] == subgroup_variable)])
             D = numD / denomD if denomD != 0 else 0
             CDD = np.append(CDD, D - A)
         return self._divide(np.sum(counts * CDD), np.sum(counts))
 
-    def global_evaluation(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, privileged_group, unprivileged_group, group_variable):
+    def global_evaluation(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, privileged_group, group_variable):
         dic = {
-            f"Class Imbalance ({protected_attribute})": self.class_imbalance_per_label(df, protected_attribute, privileged_group, unprivileged_group),
-            "KL Divergence": self.KL_divergence(df, target, protected_attribute, privileged_group, unprivileged_group),
-            "KS": self.KS(df, target, protected_attribute, privileged_group, unprivileged_group),
-            "CDDL": self.CDDL(df, target, positive_outcome, protected_attribute, unprivileged_group, group_variable)
+            f"Class Imbalance ({protected_attribute})": self.class_imbalance_per_label(df, protected_attribute, privileged_group),
+            f"KL Divergence ({protected_attribute})": self.KL_divergence(df, target, protected_attribute, privileged_group),
+            f"KS ({protected_attribute})": self.KS(df, target, protected_attribute, privileged_group),
+            f"CDDL ({protected_attribute}, {group_variable})": self.CDDL(df, target, positive_outcome, protected_attribute, privileged_group, group_variable)
         }
         return dic
 
