@@ -13,6 +13,7 @@ class IntersectionalBiasDataset(BaseDataset):
         self.n_neighbors = 39
         self.criterion = 'entropy'
         self.positive_outcome = 0
+        self.protected_attr = ['Sex', 'Race']
         super().__init__()
 
     def run(self):
@@ -57,10 +58,15 @@ class IntersectionalBiasDataset(BaseDataset):
         df['Delay'] = df['Delay'].apply(lambda x: discretize_delay(x))
 
         return df
+    
+    def get_metrics(self):
+        df_train = self.X_train.reset_index()
+        df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
+        h.evaluate_metrics('Sex', 1, 'Rumination', df_train)
+        h.evaluate_metrics('Sex', 1, 'Tension', df_train)
+        h.evaluate_metrics('Race', 1, 'Rumination', df_train)
+        h.evaluate_metrics('Race', 1, 'Tension', df_train)
 
 h = IntersectionalBiasDataset()
 h.run()
-# h.evaluate_metrics('Sex', 1, 'Rumination')
-# h.evaluate_metrics('Sex', 1, 'Tension')
-# h.evaluate_metrics('Race', 1, 'Rumination')
-# h.evaluate_metrics('Race', 1, 'Tension')
+h.get_metrics()

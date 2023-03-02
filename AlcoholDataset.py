@@ -13,6 +13,7 @@ class AlcoholDataset(BaseDataset):
         self.criterion = 'entropy'
         self.positive_outcome = 0
         self.negative_outcome = 1
+        self.protected_attr = ['gender', 'cotas']
         super().__init__()
         
     def run(self):
@@ -54,8 +55,18 @@ class AlcoholDataset(BaseDataset):
     
         return df
 
+    def get_metrics(self):
+        df_train = self.X_train.reset_index()
+        df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
+        h.evaluate_metrics('gender', 2, 'Sleep', df_train)
+        h.evaluate_metrics('gender', 2, 'change_giveup', df_train)
+        h.evaluate_metrics('cotas', 1, 'change_giveup', df_train)
+        h.evaluate_metrics('cotas', 1, 'Sleep', df_train)
+
+
 h = AlcoholDataset()
 h.run()
+h.get_metrics()
 # h.evaluate_metrics('gender', 2, 'Sleep')
 # h.evaluate_metrics('gender', 2, 'change_giveup')
 # h.evaluate_metrics('cotas', 1, 'change_giveup')

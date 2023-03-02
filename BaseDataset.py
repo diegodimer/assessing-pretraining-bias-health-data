@@ -64,6 +64,8 @@ class BaseDataset():
             print(i)
         for i in self.f1s:
             print(i)
+
+
     def run_model(self, model):
         model_name = type(model).__name__
         model.fit(self.X_train,self.y_train)
@@ -80,8 +82,10 @@ class BaseDataset():
         self.f1s.append(model_f1)
         # print(classification_report(self.y_test,self.model_predicted))
 
-    def evaluate_metrics(self, protected_attribute, privileged_group, group_variable):
-        dic = self.ptb.global_evaluation (self.dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
+    def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset = None):
+        if dataset is None:
+            dataset = self.dataset
+        dic = self.ptb.global_evaluation (dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
         for key in dic:
             val = "{:.3f}".format(dic[key])
             print("{: <50} {: >50}".format(key,val))
@@ -120,48 +124,56 @@ class BaseDataset():
         print("Maximum acc:-",max(accuracy),"at K =",req_acc_value)
         print("maximum f1:-",max(f1),"at K =",req_f1_value)
 
-    def gen_graph(self,protected_attr, labels_labels = None, outcomes_labels = None, dataset = None, predicted_attr = None):
+    def gen_graph(self,protected_attr=None, labels_labels = None, outcomes_labels = None, dataset = None, predicted_attr = None, file_name = None, df_type=None):
         if dataset is None:
             dataset = self.dataset
         if predicted_attr is None:
             predicted_attr = self.predicted_attr
+        if protected_attr is None:
+            protected_attr = self.protected_attr
+        if type(protected_attr) == str:
+            protected_attr = [protected_attr]
             
-        labels = dataset[protected_attr].unique().tolist()
-        labels.sort()
-        outcomes = dataset[predicted_attr].unique().tolist()
-        outcomes.sort()
-
-        bar_ind = []
-        bar_list = []
-        for i in outcomes:
-            for j in labels:
-                bar_ind.append(len(dataset[ (dataset[predicted_attr] == i) & (dataset[protected_attr] == j) ]))
-            bar_list.append(bar_ind)
+        for attr in protected_attr:
+            labels = dataset[attr].unique().tolist()
+            labels.sort()
+            outcomes = dataset[predicted_attr].unique().tolist()
+            outcomes.sort()
             bar_ind = []
+            bar_list = []
+            for i in outcomes:
+                for j in labels:
+                    bar_ind.append(len(dataset[ (dataset[predicted_attr] == i) & (dataset[attr] == j) ]))
+                bar_list.append(bar_ind)
+                bar_ind = []
 
-        width = 0.35       # the width of the bars: can also be len(x) sequence
-        fig, ax = plt.subplots()
-        previous = None
-        for i,j in enumerate(bar_list):
-            if i == 0:
-                ax.bar(labels, j, width, label=f'{i}')
-                previous = np.array(j)
-            if i!=0:
-                ax.bar(labels, j, width, label=f'{i}', bottom=previous)
-                previous += np.array(j)
-        plt.figure(figsize=(40,24))
-        if labels_labels is not None:
-            x_ticks_labels = labels_labels
-            ax.set_xticks(labels)
-            ax.set_xticklabels(x_ticks_labels)
-        if outcomes_labels is not None:
-            ax.legend(outcomes_labels)
-        else:
-            ax.legend(title=predicted_attr)
-        ax.set_ylabel('count')
-        for bars in ax.containers: ## if the bars should have the values
-            ax.bar_label(bars)
-        fig.savefig(f"{type(self).__name__}-{protected_attr}.png")
+            width = 0.35       # the width of the bars: can also be len(x) sequence
+            fig, ax = plt.subplots()
+            previous = None
+            for i,j in enumerate(bar_list):
+                if i == 0:
+                    ax.bar(labels, j, width, label=f'{i}')
+                    previous = np.array(j)
+                if i!=0:
+                    ax.bar(labels, j, width, label=f'{i}', bottom=previous)
+                    previous += np.array(j)
+            plt.figure(figsize=(40,24))
+            if labels_labels is not None:
+                x_ticks_labels = labels_labels
+                ax.set_xticks(labels)
+                ax.set_xticklabels(x_ticks_labels)
+            if outcomes_labels is not None:
+                ax.legend(outcomes_labels)
+            else:
+                ax.legend(title=predicted_attr)
+            ax.set_ylabel('count')
+            for bars in ax.containers: ## if the bars should have the values
+                ax.bar_label(bars)
+            if file_name is not None:
+                fig.savefig(f"{file_name}.png")
+            else:
+                fig.savefig(f"{type(self).__name__}/{df_type}{predicted_attr}-{attr}.png")
+
 
     def save_tree(self):
         dot_data = tree.export_graphviz(self.dt, out_file=None, 
@@ -172,3 +184,20 @@ class BaseDataset():
         
         graph = graphviz.Source(dot_data)  
         graph.render(f"tree-{type(self).__name__}") 
+
+
+    def result_checker(self, labels_labels = None, protected_attr=None):
+        df_out = self.X_test.reset_index()
+        y_hats  = pd.DataFrame(self.model_predicted)
+        df_out["Actual"] = self.y_test.reset_index()[self.predicted_attr]
+        df_out["Prediction"] = y_hats.reset_index()[0]
+        
+        if protected_attr == None:
+            protected_attr = self.protected_attr
+        
+        for i in self.protected_attr:
+            self.gen_graph(i, dataset = df_out, predicted_attr = 'Actual', labels_labels=labels_labels, file_name=f"{type(self).__name__}/testSet-{i}")
+            df_err = df_out.loc[ df_out['Actual'] != df_out['Prediction']]
+            self.gen_graph(i, dataset = df_err, predicted_attr = 'Prediction', labels_labels=labels_labels, file_name=f"{type(self).__name__}/errors-{i}")
+            df_corr = df_out.loc[ df_out['Actual'] == df_out['Prediction']]
+            self.gen_graph(i, dataset = df_corr, predicted_attr = 'Prediction', labels_labels=labels_labels, file_name=f"{type(self).__name__}/acerts-{i}")
