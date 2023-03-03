@@ -26,7 +26,7 @@ def test_KL_value():
     # should return a value greater than 0 as 80% of the female has presence of heart disease, while only 10% of male has. Data is unbalanced for the two demographic groups
     df_mixed = pd.concat([ df_only_female.loc[df_only_female['Heart Disease'] == 'Presence'].sample(8), df_only_female.loc[df_only_female['Heart Disease'] == 'Absence'].sample(2),
     df_only_male.loc[df_only_male['Heart Disease'] == 'Presence'].sample(1), df_only_male.loc[df_only_male['Heart Disease'] == 'Absence'].sample(9)])
-    assert(pt.KL_divergence(df_mixed, 'Heart Disease', 'Sex', 1) == 1.1457255029306632)
+    assert(round(pt.KL_divergence(df_mixed, 'Heart Disease', 'Sex', 1),4) == 1.1457)
     del df_mixed
 
 def test_KL_zero():
@@ -40,7 +40,7 @@ def test_KL_valueTwo():
     # KL example from https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-data-bias-metric-kl-divergence.html
     df_mixed = pd.concat([ df_only_female.loc[df_only_female['Heart Disease'] == 'Presence'].sample(7), df_only_female.loc[df_only_female['Heart Disease'] == 'Absence'].sample(3),
     df_only_male.loc[df_only_male['Heart Disease'] == 'Presence'].sample(2), df_only_male.loc[df_only_male['Heart Disease'] == 'Absence'].sample(8)])
-    assert(pt.KL_divergence(df_mixed, 'Heart Disease', 'Sex', 1) == 0.5341108087103075)
+    assert(round(pt.KL_divergence(df_mixed, 'Heart Disease', 'Sex', 1),4) == 0.5341)
     del df_mixed
 
 def test_KS_value():
@@ -87,7 +87,7 @@ def test_CDDL_lowValue():
         'Result':   [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,],
         'dummy':    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}
     dfs = pd.DataFrame(data=d)
-    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 1, 'dummy') == 0.5494505494505494)
+    assert( round(pt.CDDL(dfs, 'Result', 1, 'Sex', 1, 'dummy'),4) == 0.5495)
 
 def test_CDDL_oneTwo():
     # CDDL, should return 1 as there's no result=0 in the facet a (1). Dummy is inserted here as I don't want to create a correlated value for examples
@@ -125,5 +125,5 @@ def test_CDDL_fromWork():
         'dummy':    [1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0]}
     # example from work 
     dfs = pd.DataFrame(data=d)
-    assert( pt.CDDL(dfs, 'Result', 1, 'Sex', 1, 'dummy') == 0.23809523809523808 )
+    assert( round(pt.CDDL(dfs, 'Result', 1, 'Sex', 1, 'dummy'),4) == 0.2381 )
 
