@@ -63,9 +63,9 @@ class IntersectionalBiasDataset(BaseDataset):
         df_train = self.X_train.reset_index()
         df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
         h.evaluate_metrics('Sex', 1, 'Rumination', df_train)
-        h.evaluate_metrics('Sex', 1, 'Tension', df_train)
-        h.evaluate_metrics('Race', 1, 'Rumination', df_train)
-        h.evaluate_metrics('Race', 1, 'Tension', df_train)
+        h.evaluate_metrics('Sex', 1, 'Tension', df_train, True)
+        h.evaluate_metrics('Race', 1, 'Rumination', df_train, True)
+        h.evaluate_metrics('Race', 1, 'Tension', df_train, True)
 
 h = IntersectionalBiasDataset()
 h.run()

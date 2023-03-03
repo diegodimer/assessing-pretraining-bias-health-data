@@ -82,13 +82,19 @@ class BaseDataset():
         self.f1s.append(model_f1)
         # print(classification_report(self.y_test,self.model_predicted))
 
-    def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset = None):
+    def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset = None, cddl_only=False):
         if dataset is None:
             dataset = self.dataset
         dic = self.ptb.global_evaluation (dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
+        
         for key in dic:
-            val = "{:.3f}".format(dic[key])
-            print("{: <50} {: >50}".format(key,val))
+            if cddl_only:
+                if 'CDDL' in key:
+                    val = "{:.3f}".format(dic[key])
+                    print("{: <50} {: >50}".format(key,val))
+            else:
+                val = "{:.3f}".format(dic[key])
+                print("{: <50} {: >50}".format(key,val))
     
     def best_neighbors_finder(self):
         y = self.dataset[self.predicted_attr]

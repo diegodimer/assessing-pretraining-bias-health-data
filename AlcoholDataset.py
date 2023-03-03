@@ -59,9 +59,9 @@ class AlcoholDataset(BaseDataset):
         df_train = self.X_train.reset_index()
         df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
         h.evaluate_metrics('gender', 2, 'Sleep', df_train)
-        h.evaluate_metrics('gender', 2, 'change_giveup', df_train)
-        h.evaluate_metrics('cotas', 1, 'change_giveup', df_train)
-        h.evaluate_metrics('cotas', 1, 'Sleep', df_train)
+        h.evaluate_metrics('gender', 2, 'change_giveup', df_train, True)
+        h.evaluate_metrics('cotas', 1, 'change_giveup', df_train, True)
+        h.evaluate_metrics('cotas', 1, 'Sleep', df_train, True)
 
 
 h = AlcoholDataset()

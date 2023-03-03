@@ -36,9 +36,10 @@ class HeartDataset(BaseDataset):
         df_train = self.X_train.reset_index()
         df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
         h.evaluate_metrics('sex', 1, 'cp', df_train)
-        h.evaluate_metrics('sex', 1, 'thal', df_train)
+        h.evaluate_metrics('sex', 1, 'thal', df_train, True)
 
 
 h = HeartDataset()
 h.run()
-h.result_checker(labels_labels = ['Female', 'Male'])
+# h.result_checker(labels_labels = ['Female', 'Male'])
+h.get_metrics()
