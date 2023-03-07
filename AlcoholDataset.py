@@ -23,7 +23,7 @@ class AlcoholDataset(BaseDataset):
     def custom_preprocessing(self, df):
 
         def marital_status(status):  # maps single, single in a relationship, widow, divorced -> single
-            if status == 3: 
+            if status == 3:
                 return 1
             else:  # single
                 return 0
@@ -33,11 +33,11 @@ class AlcoholDataset(BaseDataset):
                 return 0
             elif num >= 2:
                 return 1
-            else: 
+            else:
                 raise
 
-        df = df.drop('year', axis=1) 
-        df = df.drop('gender_id', axis=1) 
+        df = df.drop('year', axis=1)
+        df = df.drop('gender_id', axis=1)
         df = df.drop('alcohol_dose', axis=1)
         df = df.drop('alcohol_binge', axis=1)
         df = df.drop('Audit_Total', axis=1)

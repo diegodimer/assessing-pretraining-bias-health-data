@@ -6,7 +6,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix,accuracy_score,classification_report, f1_score
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, f1_score
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -58,14 +58,14 @@ class BaseDataset():
         self._print_mean(self.f1s_rf)
         self._print_mean(self.accs_knn)
         self._print_mean(self.f1s_knn)
-     
+
     def _print_mean(self, num_list: list):
         mean = (sum(num_list)/len(num_list))
         print("{:.3f}".format(mean))
 
     def _gen_train_test_sets(self, random_state):
         y = self.dataset[self.predicted_attr]
-        X = self.dataset.drop(self.predicted_attr,axis=1)
+        X = self.dataset.drop(self.predicted_attr, axis=1)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.20, random_state = random_state)
         self.x_train_list.append(self.X_train)
         self.x_test_list.append(self.X_test)
@@ -77,7 +77,7 @@ class BaseDataset():
         if not my_file.exists():
             pp.ProfileReport(self.dataset).to_file(f"{type(self).__name__}.html")
 
-    def _execute_models(self):         
+    def _execute_models(self):
         self.lr = LogisticRegression(max_iter=self.max_iter, random_state=self.random_state)
         self.dt = DecisionTreeClassifier(criterion = 'entropy',random_state=self.random_state,max_depth=self.max_depth)
         self.rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state,max_depth=self.max_depth)
@@ -113,7 +113,7 @@ class BaseDataset():
     def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset = None, cddl_only=False):
         if dataset is None:
             dataset = self.dataset
-        dic = self.ptb.global_evaluation (dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
+        dic = self.ptb.global_evaluation(dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
 
         for key in dic:
             if cddl_only:
@@ -127,7 +127,7 @@ class BaseDataset():
 
     def best_neighbors_finder(self):
         y = self.dataset[self.predicted_attr]
-        X = self.dataset.drop(self.predicted_attr,axis=1)
+        X = self.dataset.drop(self.predicted_attr, axis=1)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.20, random_state = 0)
         accuracy = []
         f1 = []
@@ -145,9 +145,9 @@ class BaseDataset():
             f1.append(model_f1_score)
 
         plt.figure(figsize=(20,12))
-        plt.plot(range(1,max_n),error_rate,color='blue', markersize=10, label='error rate')
-        plt.plot(range(1,max_n),accuracy,color='magenta', markersize=10, label='accuracy')
-        plt.plot(range(1,max_n),f1,color='green', markersize=10, label='f1 score')
+        plt.plot(range(1,max_n), error_rate,color='blue', markersize=10, label='error rate')
+        plt.plot(range(1,max_n), accuracy,color='magenta', markersize=10, label='accuracy')
+        plt.plot(range(1,max_n), f1,color='green', markersize=10, label='f1 score')
         plt.title('Performance Metrics vs. K Value')
         plt.xlabel('K')
         plt.legend(title='Metric')
@@ -168,7 +168,7 @@ class BaseDataset():
             protected_attr = self.protected_attr
         if type(protected_attr) == str:
             protected_attr = [protected_attr]
-  
+
         for attr in protected_attr:
             labels = dataset[attr].unique().tolist()
             labels.sort()
@@ -178,7 +178,7 @@ class BaseDataset():
             bar_list = []
             for i in outcomes:
                 for j in labels:
-                    bar_ind.append(len(dataset[ (dataset[predicted_attr] == i) & (dataset[attr] == j)]))
+                    bar_ind.append(len(dataset[(dataset[predicted_attr] == i) & (dataset[attr] == j)]))
                 bar_list.append(bar_ind)
                 bar_ind = []
 
@@ -210,12 +210,12 @@ class BaseDataset():
                 fig.savefig(f"{type(self).__name__}/{df_type}{predicted_attr}-{attr}.png")
 
     def save_tree(self):
-        dot_data = tree.export_graphviz(self.dt, out_file=None, 
-                            feature_names=self.X_train.columns,  
-                            class_names=[str(x) for x in self.y_test.unique()],  
-                            filled=True, rounded=True,  
+        dot_data = tree.export_graphviz(self.dt, out_file=None,
+                            feature_names=self.X_train.columns,
+                            class_names=[str(x) for x in self.y_test.unique()],
+                            filled=True, rounded=True,
                             special_characters=True,impurity=False,max_depth=3)
-        
+
         graph = graphviz.Source(dot_data)
         graph.render(f"tree-{type(self).__name__}")
 

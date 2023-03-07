@@ -24,7 +24,7 @@ class HeartDataset(BaseDataset):
     #     y_hats  = pd.DataFrame(self.model_predicted)
     #     df_out["Actual"] = self.y_test.reset_index()['target']
     #     df_out["Prediction"] = y_hats.reset_index()[0]
-        
+
     #     self.gen_graph('sex', dataset = df_out, predicted_attr = 'Actual', labels_labels=['Female', 'Male'], file_name="heart-analysis/testSet_gender")
 
     #     df_err = df_out.loc[ df_out['Actual'] != df_out['Prediction']]
@@ -32,7 +32,7 @@ class HeartDataset(BaseDataset):
     #     df_corr = df_out.loc[ df_out['Actual'] == df_out['Prediction']]
     #     self.gen_graph('sex', dataset = df_corr, predicted_attr = 'Prediction', labels_labels=['Female', 'Male'], file_name="heart-analysis/acerts_gender")
 
-    
+
     def get_metrics(self):
         df_train = self.X_train.reset_index()
         df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]

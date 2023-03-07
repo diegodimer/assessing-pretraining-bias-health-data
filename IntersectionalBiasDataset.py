@@ -37,14 +37,14 @@ class IntersectionalBiasDataset(BaseDataset):
             elif x == 'Asian':
                 return 3
             else: raise
-        
+
         def discretize_housing(x):
             if x == 'Stable':
                 return 0
             elif x == 'Unstable':
                 return 1
             else: raise
-        
+
         def discretize_delay(x):
             if x == 'No':
                 return 0
