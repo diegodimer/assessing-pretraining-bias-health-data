@@ -66,8 +66,8 @@ class BaseDataset():
             f1 = self.f1s[model_name]
             acc_mean = (sum(acc)/len(acc))
             f1_mean = (sum(f1)/len(f1))
-            print("{} accuracy = {:.3f}".format(model_name, acc_mean))
-            print("{} f1 score = {:.3f}".format(model_name, f1_mean))
+            print("{: <30}{: >30.3f}".format(model_name + ' acc', acc_mean))
+            print("{: <30}{: >30.3f}".format(model_name + ' f1', f1_mean))
 
     def _gen_train_test_sets(self, random_state):
         y = self.dataset[self.predicted_attr]
@@ -103,12 +103,10 @@ class BaseDataset():
         for key in dic:
             if cddl_only:
                 if 'CDDL' in key:
-                    val = "{:.3f}".format(dic[key])
-                    print("{: <50} {: >50}".format(key, val))
+                    print("{: <30}{: >30.3f}".format(key, dic[key]))
                     break
             else:
-                val = "{:.3f}".format(dic[key])
-                print("{: <50} {: >50}".format(key, val))
+                print("{: <30}{: >30.3f}".format(key, dic[key]))
 
     def gen_graph(self, protected_attr=None, labels_labels=None, outcomes_labels=None, dataset=None, predicted_attr=None, file_name=None, df_type=None):
         if dataset is None:
