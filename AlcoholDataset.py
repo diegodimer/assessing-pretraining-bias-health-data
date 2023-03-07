@@ -1,6 +1,7 @@
 from BaseDataset import BaseDataset
 import pandas as pd
 
+
 class AlcoholDataset(BaseDataset):
     def __init__(self):
         self.dataset = self.custom_preprocessing(pd.read_csv("datasets/banco_flavia.csv"))
@@ -15,18 +16,18 @@ class AlcoholDataset(BaseDataset):
         self.negative_outcome = 1
         self.protected_attr = ['gender', 'cotas']
         super().__init__()
-        
+
     def run(self):
         return super()._run()
 
     def custom_preprocessing(self, df):
 
-        def marital_status(status): # maps single, single in a relationship, widow, divorced -> single
+        def marital_status(status):  # maps single, single in a relationship, widow, divorced -> single
             if status == 3: 
                 return 1
-            else: # single
+            else:  # single
                 return 0
-        
+
         def children(num):
             if num == 1:
                 return 0
@@ -52,7 +53,7 @@ class AlcoholDataset(BaseDataset):
         df = df.drop_duplicates()
         df['marital_status'] = df['marital_status'].apply(lambda x: marital_status(x))
         df['children'] = df['children'].apply(lambda x: children(x))
-    
+
         return df
 
     def get_metrics(self):
@@ -66,8 +67,3 @@ class AlcoholDataset(BaseDataset):
 
 h = AlcoholDataset()
 h.run()
-h.get_metrics()
-# h.evaluate_metrics('gender', 2, 'Sleep')
-# h.evaluate_metrics('gender', 2, 'change_giveup')
-# h.evaluate_metrics('cotas', 1, 'change_giveup')
-# h.evaluate_metrics('cotas', 1, 'Sleep')

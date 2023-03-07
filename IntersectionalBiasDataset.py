@@ -1,6 +1,6 @@
 from BaseDataset import BaseDataset
 import pandas as pd
-# import matplotlib.pyplot as plt
+
 
 class IntersectionalBiasDataset(BaseDataset):
     def __init__(self):
@@ -18,7 +18,7 @@ class IntersectionalBiasDataset(BaseDataset):
 
     def run(self):
         return super()._run()
-    
+
     def custom_preprocessing(self, df):
         def discretize_sex(x):
             if x == 'Female':
@@ -58,7 +58,7 @@ class IntersectionalBiasDataset(BaseDataset):
         df['Delay'] = df['Delay'].apply(lambda x: discretize_delay(x))
 
         return df
-    
+
     def get_metrics(self):
         df_train = self.X_train.reset_index()
         df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]

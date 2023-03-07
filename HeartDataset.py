@@ -1,6 +1,7 @@
 from BaseDataset import BaseDataset
 import pandas as pd
 
+
 class HeartDataset(BaseDataset):
     def __init__(self):
         self.dataset = pd.read_csv("datasets/heart.csv").drop_duplicates()
