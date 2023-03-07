@@ -32,10 +32,10 @@ class HeartDataset(BaseDataset):
     #     df_corr = df_out.loc[ df_out['Actual'] == df_out['Prediction']]
     #     self.gen_graph('sex', dataset = df_corr, predicted_attr = 'Prediction', labels_labels=['Female', 'Male'], file_name="heart-analysis/acerts_gender")
 
-
     def get_metrics(self):
         df_train = self.X_train.reset_index()
-        df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
+        df_train[self.predicted_attr] = self.y_train.reset_index()[
+            self.predicted_attr]
         h.evaluate_metrics('sex', 1, 'cp', df_train)
         h.evaluate_metrics('sex', 1, 'thal', df_train, True)
 

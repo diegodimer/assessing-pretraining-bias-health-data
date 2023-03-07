@@ -45,21 +45,22 @@ class PreTrainingBias():
         P_list = list()
         sensitive_facet_index = df[protected_attribute] != privileged_group
         unsensitive_facet_index = df[protected_attribute] == privileged_group
-        P_list = pdfs_aligned_nonzero(label[unsensitive_facet_index], label[sensitive_facet_index])
+        P_list = pdfs_aligned_nonzero(
+            label[unsensitive_facet_index], label[sensitive_facet_index])
         ks_val = 0
-        for i, j in enumerate(P_list[0]): # j = 0, 2 , i = 0
+        for i, j in enumerate(P_list[0]):  # j = 0, 2 , i = 0
             ks_val += self._kl_divergence(j, P_list[1][i])
         return ks_val
-    
-    
+
     def KS(self, df, target, protected_attribute: str, privileged_group) -> float:
         label = df[target]
         P_list = list()
         sensitive_facet_index = df[protected_attribute] != privileged_group
         unsensitive_facet_index = df[protected_attribute] == privileged_group
-        P_list = pdfs_aligned_nonzero(label[unsensitive_facet_index], label[sensitive_facet_index])
+        P_list = pdfs_aligned_nonzero(
+            label[unsensitive_facet_index], label[sensitive_facet_index])
         ks_val = 0
-        for i, j in enumerate(P_list[0]): 
+        for i, j in enumerate(P_list[0]):
             ks_val = max(ks_val, abs(np.subtract(j, P_list[1][i])))
         return ks_val
 
@@ -68,12 +69,17 @@ class PreTrainingBias():
         CDD = np.array([])
         counts = np.array([])
         for subgroup_variable in unique_groups:
-            counts = np.append(counts, (df[group_variable].values == subgroup_variable).sum())
-            numA = len (df[(df[target]==positive_outcome) & (df[protected_attribute]!=privileged_group) & (df[group_variable] == subgroup_variable)]) 
-            denomA = len (df[(df[target]==positive_outcome) & (df[group_variable] == subgroup_variable)])
+            counts = np.append(
+                counts, (df[group_variable].values == subgroup_variable).sum())
+            numA = len(df[(df[target] == positive_outcome) & (
+                df[protected_attribute] != privileged_group) & (df[group_variable] == subgroup_variable)])
+            denomA = len(df[(df[target] == positive_outcome) &
+                         (df[group_variable] == subgroup_variable)])
             A = numA / denomA if denomA != 0 else 0
-            numD =  len (df[(df[target]!=positive_outcome) & (df[protected_attribute]!=privileged_group) & (df[group_variable] == subgroup_variable)])
-            denomD =  len (df[(df[target]!=positive_outcome) & (df[group_variable] == subgroup_variable)])
+            numD = len(df[(df[target] != positive_outcome) & (
+                df[protected_attribute] != privileged_group) & (df[group_variable] == subgroup_variable)])
+            denomD = len(df[(df[target] != positive_outcome) &
+                         (df[group_variable] == subgroup_variable)])
             D = numD / denomD if denomD != 0 else 0
             CDD = np.append(CDD, D - A)
         return self._divide(np.sum(counts * CDD), np.sum(counts))
@@ -86,5 +92,3 @@ class PreTrainingBias():
             f"CDDL ({protected_attribute}, {group_variable})": self.CDDL(df, target, positive_outcome, protected_attribute, privileged_group, group_variable)
         }
         return dic
-
-    

@@ -4,7 +4,8 @@ import pandas as pd
 
 class AlcoholDataset(BaseDataset):
     def __init__(self):
-        self.dataset = self.custom_preprocessing(pd.read_csv("datasets/banco_flavia.csv"))
+        self.dataset = self.custom_preprocessing(
+            pd.read_csv("datasets/banco_flavia.csv"))
         self.predicted_attr = "phq_diagnosis"
         self.max_iter = 1000
         self.n_estimators = 40
@@ -22,7 +23,8 @@ class AlcoholDataset(BaseDataset):
 
     def custom_preprocessing(self, df):
 
-        def marital_status(status):  # maps single, single in a relationship, widow, divorced -> single
+        # maps single, single in a relationship, widow, divorced -> single
+        def marital_status(status):
             if status == 3:
                 return 1
             else:  # single
@@ -51,14 +53,16 @@ class AlcoholDataset(BaseDataset):
         df = df.drop('bullying_yes', axis=1)
         df = df.drop('family_income', axis=1)
         df = df.drop_duplicates()
-        df['marital_status'] = df['marital_status'].apply(lambda x: marital_status(x))
+        df['marital_status'] = df['marital_status'].apply(
+            lambda x: marital_status(x))
         df['children'] = df['children'].apply(lambda x: children(x))
 
         return df
 
     def get_metrics(self):
         df_train = self.X_train.reset_index()
-        df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
+        df_train[self.predicted_attr] = self.y_train.reset_index()[
+            self.predicted_attr]
         h.evaluate_metrics('gender', 2, 'Sleep', df_train)
         h.evaluate_metrics('gender', 2, 'change_giveup', df_train, True)
         h.evaluate_metrics('cotas', 1, 'change_giveup', df_train, True)
