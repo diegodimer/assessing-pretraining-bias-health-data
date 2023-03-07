@@ -79,8 +79,8 @@ class BaseDataset():
 
     def _execute_models(self):
         self.lr = LogisticRegression(max_iter=self.max_iter, random_state=self.random_state)
-        self.dt = DecisionTreeClassifier(criterion = 'entropy',random_state=self.random_state,max_depth=self.max_depth)
-        self.rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state,max_depth=self.max_depth)
+        self.dt = DecisionTreeClassifier(criterion = 'entropy', random_state=self.random_state, max_depth=self.max_depth)
+        self.rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state, max_depth=self.max_depth)
         self.knn = KNeighborsClassifier(n_neighbors=self.n_neighbors)
 
         acc_lr, f1_lr  = self._run_model(self.lr)
@@ -99,15 +99,15 @@ class BaseDataset():
 
     def _run_model(self, model):
         # model_name = type(model).__name__
-        model.fit(self.X_train,self.y_train)
+        model.fit(self.X_train, self.y_train)
         self.model_predicted = model.predict(self.X_test)
         # model_conf_matrix = confusion_matrix(self.y_test, self.model_predicted)
         model_acc_score = accuracy_score(self.y_test, self.model_predicted) * 100
-        model_f1_score = f1_score(self.y_test,self.model_predicted) * 100
+        model_f1_score = f1_score(self.y_test, self.model_predicted) * 100
         # print(f"confussion matrix for {model_name}: \n{model_conf_matrix}")
         # print(f"Accuracy of {model_name}: {model_acc}")
         # print(f"F1 Score of {model_name}: {model_f1}\n" )
-        # print(classification_report(self.y_test,self.model_predicted))
+        # print(classification_report(self.y_test, self.model_predicted))
         return model_acc_score, model_f1_score
 
     def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset = None, cddl_only=False):
@@ -119,11 +119,11 @@ class BaseDataset():
             if cddl_only:
                 if 'CDDL' in key:
                     val = "{:.3f}".format(dic[key])
-                    print("{: <50} {: >50}".format(key,val))
+                    print("{: <50} {: >50}".format(key, val))
                     break
             else:
                 val = "{:.3f}".format(dic[key])
-                print("{: <50} {: >50}".format(key,val))
+                print("{: <50} {: >50}".format(key, val))
 
     def best_neighbors_finder(self):
         y = self.dataset[self.predicted_attr]
@@ -133,21 +133,21 @@ class BaseDataset():
         f1 = []
         error_rate = []
         max_n = self.X_train.shape[0] + 1
-        for i in range(1,max_n):
+        for i in range(1, max_n):
             model = KNeighborsClassifier(n_neighbors=i)
-            model.fit(self.X_train,self.y_train)
+            model.fit(self.X_train, self.y_train)
             self.model_predicted = model.predict(self.X_test)
 
             model_acc_score = accuracy_score(self.y_test, self.model_predicted)
-            model_f1_score = f1_score(self.y_test,self.model_predicted)
+            model_f1_score = f1_score(self.y_test, self.model_predicted)
             error_rate.append(np.mean(self.model_predicted != self.y_test))
             accuracy.append(model_acc_score)
             f1.append(model_f1_score)
 
-        plt.figure(figsize=(20,12))
-        plt.plot(range(1,max_n), error_rate,color='blue', markersize=10, label='error rate')
-        plt.plot(range(1,max_n), accuracy,color='magenta', markersize=10, label='accuracy')
-        plt.plot(range(1,max_n), f1,color='green', markersize=10, label='f1 score')
+        plt.figure(figsize=(20, 12))
+        plt.plot(range(1, max_n), error_rate, color='blue', markersize=10, label='error rate')
+        plt.plot(range(1, max_n), accuracy, color='magenta', markersize=10, label='accuracy')
+        plt.plot(range(1, max_n), f1, color='green', markersize=10, label='f1 score')
         plt.title('Performance Metrics vs. K Value')
         plt.xlabel('K')
         plt.legend(title='Metric')
@@ -155,11 +155,11 @@ class BaseDataset():
         req_k_value = error_rate.index(min(error_rate))+1
         req_acc_value = accuracy.index(max(accuracy))+1
         req_f1_value = f1.index(max(f1))+1
-        print("Minimum error:-",min(error_rate),"at K =",req_k_value)
-        print("Maximum acc:-",max(accuracy),"at K =",req_acc_value)
-        print("maximum f1:-",max(f1),"at K =",req_f1_value)
+        print("Minimum error:-", min(error_rate),"at K =", req_k_value)
+        print("Maximum acc:-", max(accuracy),"at K =", req_acc_value)
+        print("maximum f1:-", max(f1),"at K =", req_f1_value)
 
-    def gen_graph(self,protected_attr=None, labels_labels = None, outcomes_labels = None, dataset = None, predicted_attr = None, file_name = None, df_type=None):
+    def gen_graph(self, protected_attr=None, labels_labels = None, outcomes_labels = None, dataset = None, predicted_attr = None, file_name = None, df_type=None):
         if dataset is None:
             dataset = self.dataset
         if predicted_attr is None:
@@ -185,14 +185,14 @@ class BaseDataset():
             width = 0.35       # the width of the bars: can also be len(x) sequence
             fig, ax = plt.subplots()
             previous = None
-            for i,j in enumerate(bar_list):
+            for i, j in enumerate(bar_list):
                 if i == 0:
                     ax.bar(labels, j, width, label=f'{i}')
                     previous = np.array(j)
                 if i!=0:
                     ax.bar(labels, j, width, label=f'{i}', bottom=previous)
                     previous += np.array(j)
-            plt.figure(figsize=(40,24))
+            plt.figure(figsize=(40, 24))
             if labels_labels is not None:
                 x_ticks_labels = labels_labels
                 ax.set_xticks(labels)
@@ -214,7 +214,7 @@ class BaseDataset():
                             feature_names=self.X_train.columns,
                             class_names=[str(x) for x in self.y_test.unique()],
                             filled=True, rounded=True,
-                            special_characters=True,impurity=False,max_depth=3)
+                            special_characters=True, impurity=False, max_depth=3)
 
         graph = graphviz.Source(dot_data)
         graph.render(f"tree-{type(self).__name__}")

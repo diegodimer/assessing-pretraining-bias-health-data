@@ -47,7 +47,7 @@ class PreTrainingBias():
         unsensitive_facet_index = df[protected_attribute] == privileged_group
         P_list = pdfs_aligned_nonzero(label[unsensitive_facet_index], label[sensitive_facet_index])
         ks_val = 0
-        for i, j in enumerate(P_list[0]): # j = 0,2 , i = 0
+        for i, j in enumerate(P_list[0]): # j = 0, 2 , i = 0
             ks_val += self._kl_divergence(j, P_list[1][i])
         return ks_val
     
@@ -60,7 +60,7 @@ class PreTrainingBias():
         P_list = pdfs_aligned_nonzero(label[unsensitive_facet_index], label[sensitive_facet_index])
         ks_val = 0
         for i, j in enumerate(P_list[0]): 
-            ks_val = max(ks_val, abs(np.subtract(j,P_list[1][i])))
+            ks_val = max(ks_val, abs(np.subtract(j, P_list[1][i])))
         return ks_val
 
     def CDDL(self, df: pd.DataFrame, target: str, positive_outcome, protected_attribute, privileged_group, group_variable) -> float:
