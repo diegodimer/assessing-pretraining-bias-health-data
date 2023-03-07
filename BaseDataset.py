@@ -27,13 +27,13 @@ class BaseDataset():
     criterion = None
     positive_outcome = None
     negative_outcome = None
-    model_predicted = None
     num_repetitions = 5
     # variables to be used by this main class
     x_train_list = []
     x_test_list = []
     y_train_list = []
     y_test_list = []
+    predicted_list = []
     accs = defaultdict(list)
     f1s = defaultdict(list)
     models = defaultdict()
@@ -80,18 +80,19 @@ class BaseDataset():
         self.y_test_list.append(self.y_test)
 
     def _gen_pp_report(self):
-        my_file = Path(f"{type(self).__name__}.html")
+        my_file = Path(f"{type(self).__name__}/report.html")
         if not my_file.exists():
             pp.ProfileReport(self.dataset).to_file(
-                f"{type(self).__name__}.html")
+                f"{type(self).__name__}/report.html")
 
     def _run_model(self, model):
         model.fit(self.X_train, self.y_train)
-        self.model_predicted = model.predict(self.X_test)
+        model_predicted = model.predict(self.X_test)
+        self.predicted_list.append(model_predicted)
         # model_conf_matrix = confusion_matrix(self.y_test, self.model_predicted)
         model_acc_score = accuracy_score(
-            self.y_test, self.model_predicted) * 100
-        model_f1_score = f1_score(self.y_test, self.model_predicted) * 100
+            self.y_test, model_predicted) * 100
+        model_f1_score = f1_score(self.y_test, model_predicted) * 100
         return model_acc_score, model_f1_score
 
     def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset=None, cddl_only=False):
@@ -156,15 +157,16 @@ class BaseDataset():
             for bars in ax.containers:  # if the bars should have the values
                 ax.bar_label(bars)
             if file_name is not None:
-                fig.savefig(f"{file_name}.png")
+                fig.savefig(f"{type(self).__name__}/{file_name}.png")
             else:
                 fig.savefig(
-                    f"{type(self).__name__}/{df_type}{predicted_attr}-{attr}.png")
+                    f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png")
 
-    def result_checker(self, labels_labels=None, protected_attr=None):
-        df_out = self.X_test.reset_index()
-        y_hats = pd.DataFrame(self.model_predicted)
-        df_out["Actual"] = self.y_test.reset_index()[self.predicted_attr]
+    def result_checker(self, repetition_number, labels_labels=None, protected_attr=None):
+        df_out = self.x_test_list[repetition_number].reset_index()
+        y_hats = pd.DataFrame(self.predicted_list[repetition_number])
+        df_out["Actual"] = self.y_test_list[repetition_number].reset_index()[
+            self.predicted_attr]
         df_out["Prediction"] = y_hats.reset_index()[0]
 
         if protected_attr is None:
@@ -172,13 +174,15 @@ class BaseDataset():
 
         for i in self.protected_attr:
             self.gen_graph(i, dataset=df_out, predicted_attr='Actual',
-                           labels_labels=labels_labels, file_name=f"{type(self).__name__}/testSet-{i}")
+                           labels_labels=labels_labels, df_type=f'testSet-{repetition_number}')
+
             df_err = df_out.loc[df_out['Actual'] != df_out['Prediction']]
             self.gen_graph(i, dataset=df_err, predicted_attr='Prediction',
-                           labels_labels=labels_labels, file_name=f"{type(self).__name__}/errors-{i}")
+                           labels_labels=labels_labels, df_type=f'error-{repetition_number}')
+
             df_corr = df_out.loc[df_out['Actual'] == df_out['Prediction']]
             self.gen_graph(i, dataset=df_corr, predicted_attr='Prediction',
-                           labels_labels=labels_labels, file_name=f"{type(self).__name__}/acerts-{i}")
+                           labels_labels=labels_labels, df_type=f'correct-{repetition_number}')
 
     def save_tree(self):
         dot_data = tree.export_graphviz(self.models['Decision Tree'], out_file=None,
@@ -203,11 +207,11 @@ class BaseDataset():
         for i in range(1, max_n):
             model = KNeighborsClassifier(n_neighbors=i)
             model.fit(self.X_train, self.y_train)
-            self.model_predicted = model.predict(self.X_test)
+            model_predicted = model.predict(self.X_test)
 
-            model_acc_score = accuracy_score(self.y_test, self.model_predicted)
-            model_f1_score = f1_score(self.y_test, self.model_predicted)
-            error_rate.append(np.mean(self.model_predicted != self.y_test))
+            model_acc_score = accuracy_score(self.y_test, model_predicted)
+            model_f1_score = f1_score(self.y_test, model_predicted)
+            error_rate.append(np.mean(model_predicted != self.y_test))
             accuracy.append(model_acc_score)
             f1.append(model_f1_score)
 

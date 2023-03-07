@@ -1,10 +1,11 @@
 from BaseDataset import BaseDataset
 import pandas as pd
+import numpy as np
 
 
 class HeartDataset(BaseDataset):
-    def __init__(self):
-        self.dataset = pd.read_csv("datasets/heart.csv").drop_duplicates()
+    def __init__(self, dataset=None):
+        self.dataset = dataset if dataset is not None else pd.read_csv("datasets/heart.csv").drop_duplicates()
         self.predicted_attr = "target"
         self.max_iter = 1000
         self.n_estimators = 20
@@ -19,19 +20,6 @@ class HeartDataset(BaseDataset):
     def run(self):
         return super()._run()
 
-    # def result_checker(self):
-    #     df_out = self.X_test.reset_index()
-    #     y_hats  = pd.DataFrame(self.model_predicted)
-    #     df_out["Actual"] = self.y_test.reset_index()['target']
-    #     df_out["Prediction"] = y_hats.reset_index()[0]
-
-    #     self.gen_graph('sex', dataset = df_out, predicted_attr = 'Actual', labels_labels=['Female', 'Male'], file_name="heart-analysis/testSet_gender")
-
-    #     df_err = df_out.loc[ df_out['Actual'] != df_out['Prediction']]
-    #     self.gen_graph('sex', dataset = df_err, predicted_attr = 'Prediction', labels_labels=['Female', 'Male'], file_name="heart-analysis/errors_gender")
-    #     df_corr = df_out.loc[ df_out['Actual'] == df_out['Prediction']]
-    #     self.gen_graph('sex', dataset = df_corr, predicted_attr = 'Prediction', labels_labels=['Female', 'Male'], file_name="heart-analysis/acerts_gender")
-
     def get_metrics(self):
         df_train = self.X_train.reset_index()
         df_train[self.predicted_attr] = self.y_train.reset_index()[
@@ -41,6 +29,19 @@ class HeartDataset(BaseDataset):
 
 
 h = HeartDataset()
+print('==========Before===========')
 h.run()
-# h.result_checker(labels_labels = ['Female', 'Male'])
-h.get_metrics()
+h.gen_graph('sex', df_type='fullDataset')
+h.evaluate_metrics('sex', 1, 'cp', h.dataset)
+h.evaluate_metrics('sex', 1, 'thal', h.dataset, True)
+
+print('==========After===========')
+df = h.dataset.loc[h.dataset['sex'] == 0]
+remove_n = 40
+drop_indices = np.random.choice(df.index, remove_n, replace=False)
+df_subset = h.dataset.drop(drop_indices)
+h2 = HeartDataset(df_subset)
+h2.run()
+h2.gen_graph( 'sex', df_type='modifiedDataset')
+h2.evaluate_metrics('sex', 1, 'cp')
+h2.evaluate_metrics('sex', 1, 'thal', cddl_only=True)
