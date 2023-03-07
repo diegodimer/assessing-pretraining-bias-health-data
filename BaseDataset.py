@@ -12,75 +12,103 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from PreTrainingBias import PreTrainingBias
 import graphviz
+
 class BaseDataset():
-    dataset         = None
-    predicted_attr  = None
-    X_train         = None
-    X_test          = None
-    y_train         = None
-    y_test          = None
-    max_iter        = None
-    n_estimators    = None
-    random_state    = None
-    max_depth       = None
-    n_neighbors     = None
-    criterion       = None
+    # base variables to be overwritten by child class
+    dataset          = None
+    predicted_attr   = None
+    max_iter         = None
+    n_estimators     = None
+    random_state     = None
+    max_depth        = None
+    n_neighbors      = None
+    criterion        = None
     positive_outcome = None
     negative_outcome = None
-    model_predicted = None
-    lr = None
-    rf = None
-    dt = None
-    knn = None
-    accs = []
-    f1s = []
+    model_predicted  = None
+    num_repetitions  = 2
+    # variables to be used by this main class
+    accs_lr          = []
+    f1s_lr           = []
+    accs_dt          = []
+    f1s_dt           = []
+    accs_rf          = []
+    f1s_rf           = []
+    accs_knn         = []
+    f1s_knn          = []
+    x_train_list     = []
+    x_test_list      = []
+    y_train_list     = []
+    y_test_list      = []
+    
     def __init__(self) -> None:
         self.ptb = PreTrainingBias()
     
-    def _run(self): 
-        my_file = Path(f"{type(self).__name__}.html")
-
-        if not my_file.exists():
-            pp.ProfileReport(self.dataset).to_file(f"{type(self).__name__}.html")
-
+    def _run(self):
+        # self._gen_pp_report()
+        for i in range(self.num_repetitions):
+            self._gen_train_test_sets(i)
+            self._execute_models()
+        self._print_mean(self.accs_lr)
+        self._print_mean(self.f1s_lr)
+        self._print_mean(self.accs_dt)
+        self._print_mean(self.f1s_dt)
+        self._print_mean(self.accs_rf)
+        self._print_mean(self.f1s_rf)
+        self._print_mean(self.accs_knn)
+        self._print_mean(self.f1s_knn)
+            
+    def _print_mean(self, num_list: list):
+        mean = (sum(num_list) / len(num_list)) 
+        print( "{:.3f}".format(mean) )
+    
+    def _gen_train_test_sets(self, random_state):
         y = self.dataset[self.predicted_attr]
         X = self.dataset.drop(self.predicted_attr,axis=1)
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.20, random_state = 0) # adicionar 10/5 repetições do split 
-        
-        print(self.y_test.value_counts())
-        print(self.y_train.value_counts())
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.20, random_state = random_state) 
+        self.x_train_list.append(self.X_train)
+        self.x_test_list.append(self.X_test)
+        self.y_train_list.append(self.y_train)
+        self.y_test_list.append(self.y_test)
 
-        # models
-        self.lr = LogisticRegression(max_iter=self.max_iter)
+    def _gen_pp_report(self):
+        my_file = Path(f"{type(self).__name__}.html")
+        if not my_file.exists():
+            pp.ProfileReport(self.dataset).to_file(f"{type(self).__name__}.html")
+        
+    def _execute_models(self):         
+        self.lr = LogisticRegression(max_iter=self.max_iter, random_state=self.random_state)
         self.dt = DecisionTreeClassifier(criterion = 'entropy',random_state=self.random_state,max_depth=self.max_depth)
         self.rf = RandomForestClassifier(n_estimators=self.n_estimators, random_state=self.random_state,max_depth=self.max_depth)
         self.knn = KNeighborsClassifier(n_neighbors=self.n_neighbors)
 
-        self.run_model(self.lr)
-        self.run_model(self.dt)
-        self.run_model(self.rf)
-        self.run_model(self.knn)
-        for i in self.accs:
-            print(i)
-        for i in self.f1s:
-            print(i)
+        acc_lr, f1_lr  = self._run_model(self.lr)
+        acc_dt, f1_dt  = self._run_model(self.dt)
+        acc_rf, f1_rf  = self._run_model(self.rf)
+        acc_knn, f1_knn  = self._run_model(self.knn)
+        
+        self.accs_lr.append(acc_lr)
+        self.f1s_lr.append(f1_lr)
+        self.accs_dt.append(acc_dt)
+        self.f1s_dt.append(f1_dt)
+        self.accs_rf.append(acc_rf)
+        self.f1s_rf.append(f1_rf)
+        self.accs_knn.append(acc_knn)
+        self.f1s_knn.append(f1_knn)
+        
 
-
-    def run_model(self, model):
-        model_name = type(model).__name__
+    def _run_model(self, model):
+        # model_name = type(model).__name__
         model.fit(self.X_train,self.y_train)
         self.model_predicted = model.predict(self.X_test)
-        model_conf_matrix = confusion_matrix(self.y_test, self.model_predicted)
-        model_acc_score = accuracy_score(self.y_test, self.model_predicted)
-        model_f1_score = f1_score(self.y_test,self.model_predicted)
-        model_acc = "{:.3f}".format(model_acc_score*100)
-        model_f1 = "{:.3f}".format(model_f1_score*100)
+        # model_conf_matrix = confusion_matrix(self.y_test, self.model_predicted)
+        model_acc_score = accuracy_score(self.y_test, self.model_predicted) * 100
+        model_f1_score = f1_score(self.y_test,self.model_predicted) * 100
         # print(f"confussion matrix for {model_name}: \n{model_conf_matrix}")
-        print(f"Accuracy of {model_name}: {model_acc}")
-        print(f"F1 Score of {model_name}: {model_f1}\n" )
-        self.accs.append(model_acc)
-        self.f1s.append(model_f1)
+        # print(f"Accuracy of {model_name}: {model_acc}")
+        # print(f"F1 Score of {model_name}: {model_f1}\n" )
         # print(classification_report(self.y_test,self.model_predicted))
+        return model_acc_score, model_f1_score
 
     def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset = None, cddl_only=False):
         if dataset is None:
@@ -92,6 +120,7 @@ class BaseDataset():
                 if 'CDDL' in key:
                     val = "{:.3f}".format(dic[key])
                     print("{: <50} {: >50}".format(key,val))
+                    break
             else:
                 val = "{:.3f}".format(dic[key])
                 print("{: <50} {: >50}".format(key,val))
