@@ -217,7 +217,7 @@ class BaseDataset():
         df_out["Actual"] = self.y_test.reset_index()[self.predicted_attr]
         df_out["Prediction"] = y_hats.reset_index()[0]
 
-        if protected_attr == None:
+        if protected_attr is None:
             protected_attr = self.protected_attr
 
         for i in self.protected_attr:

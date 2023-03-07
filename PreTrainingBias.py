@@ -1,4 +1,3 @@
-from distutils.log import error
 from typing import List
 import pandas as pd
 import numpy as np
@@ -31,7 +30,7 @@ class PreTrainingBias():
         if (len(facet_counts) == 2):
             return self._class_imbalance(facet_counts.values[0], facet_counts.values[1])
         else:  # is not a binary attr
-            if threshold == None:
+            if threshold is None:
                 raise Exception("Threshold not defined")
             a = len(df[df[label] > threshold])
             b = len(df[df[label] <= threshold])
