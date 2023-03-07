@@ -40,6 +40,7 @@ class BaseDataset():
 
     def __init__(self) -> None:
         self.ptb = PreTrainingBias()
+
         self.models['Logistic Regression'] = LogisticRegression(
             max_iter=self.max_iter, random_state=self.random_state)
 
@@ -52,7 +53,7 @@ class BaseDataset():
         self.models['KNN'] = KNeighborsClassifier(n_neighbors=self.n_neighbors)
 
     def _run(self):
-        self._gen_pp_report()
+        # self._gen_pp_report()
         for i in range(self.num_repetitions):
             self._gen_train_test_sets(i)
             for model_name in self.models:
@@ -61,12 +62,12 @@ class BaseDataset():
                 self.f1s[model_name].append(f1)
 
         for model_name in self.accs:
-            self._print_mean(self.accs[model_name])
-            self._print_mean(self.f1s[model_name])
-
-    def _print_mean(self, num_list: list):
-        mean = (sum(num_list)/len(num_list))
-        print("{:.3f}".format(mean))
+            acc = self.accs[model_name]
+            f1 = self.f1s[model_name]
+            acc_mean = (sum(acc)/len(acc))
+            f1_mean = (sum(f1)/len(f1))
+            print("{} accuracy = {:.3f}".format(model_name, acc_mean))
+            print("{} f1 score = {:.3f}".format(model_name, f1_mean))
 
     def _gen_train_test_sets(self, random_state):
         y = self.dataset[self.predicted_attr]
@@ -108,44 +109,6 @@ class BaseDataset():
             else:
                 val = "{:.3f}".format(dic[key])
                 print("{: <50} {: >50}".format(key, val))
-
-    def best_neighbors_finder(self):
-        y = self.dataset[self.predicted_attr]
-        X = self.dataset.drop(self.predicted_attr, axis=1)
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            X, y, test_size=0.20, random_state=0)
-        accuracy = []
-        f1 = []
-        error_rate = []
-        max_n = self.X_train.shape[0] + 1
-        for i in range(1, max_n):
-            model = KNeighborsClassifier(n_neighbors=i)
-            model.fit(self.X_train, self.y_train)
-            self.model_predicted = model.predict(self.X_test)
-
-            model_acc_score = accuracy_score(self.y_test, self.model_predicted)
-            model_f1_score = f1_score(self.y_test, self.model_predicted)
-            error_rate.append(np.mean(self.model_predicted != self.y_test))
-            accuracy.append(model_acc_score)
-            f1.append(model_f1_score)
-
-        plt.figure(figsize=(20, 12))
-        plt.plot(range(1, max_n), error_rate, color='blue',
-                 markersize=10, label='error rate')
-        plt.plot(range(1, max_n), accuracy, color='magenta',
-                 markersize=10, label='accuracy')
-        plt.plot(range(1, max_n), f1, color='green',
-                 markersize=10, label='f1 score')
-        plt.title('Performance Metrics vs. K Value')
-        plt.xlabel('K')
-        plt.legend(title='Metric')
-        plt.savefig(f'{type(self).__name__}.png')
-        req_k_value = error_rate.index(min(error_rate))+1
-        req_acc_value = accuracy.index(max(accuracy))+1
-        req_f1_value = f1.index(max(f1))+1
-        print("Minimum error:-", min(error_rate), "at K =", req_k_value)
-        print("Maximum acc:-", max(accuracy), "at K =", req_acc_value)
-        print("maximum f1:-", max(f1), "at K =", req_f1_value)
 
     def gen_graph(self, protected_attr=None, labels_labels=None, outcomes_labels=None, dataset=None, predicted_attr=None, file_name=None, df_type=None):
         if dataset is None:
@@ -200,17 +163,6 @@ class BaseDataset():
                 fig.savefig(
                     f"{type(self).__name__}/{df_type}{predicted_attr}-{attr}.png")
 
-    def save_tree(self):
-        dot_data = tree.export_graphviz(self.dt, out_file=None,
-                                        feature_names=self.X_train.columns,
-                                        class_names=[
-                                            str(x) for x in self.y_test.unique()],
-                                        filled=True, rounded=True,
-                                        special_characters=True, impurity=False, max_depth=3)
-
-        graph = graphviz.Source(dot_data)
-        graph.render(f"tree-{type(self).__name__}")
-
     def result_checker(self, labels_labels=None, protected_attr=None):
         df_out = self.X_test.reset_index()
         y_hats = pd.DataFrame(self.model_predicted)
@@ -229,3 +181,52 @@ class BaseDataset():
             df_corr = df_out.loc[df_out['Actual'] == df_out['Prediction']]
             self.gen_graph(i, dataset=df_corr, predicted_attr='Prediction',
                            labels_labels=labels_labels, file_name=f"{type(self).__name__}/acerts-{i}")
+
+    def save_tree(self):
+        dot_data = tree.export_graphviz(self.models['Decision Tree'], out_file=None,
+                                        feature_names=self.X_train.columns,
+                                        class_names=[
+                                            str(x) for x in self.y_test.unique()],
+                                        filled=True, rounded=True,
+                                        special_characters=True, impurity=False, max_depth=3)
+
+        graph = graphviz.Source(dot_data)
+        graph.render(f"tree-{type(self).__name__}")
+
+    def best_neighbors_finder(self):
+        y = self.dataset[self.predicted_attr]
+        X = self.dataset.drop(self.predicted_attr, axis=1)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            X, y, test_size=0.20, random_state=0)
+        accuracy = []
+        f1 = []
+        error_rate = []
+        max_n = self.X_train.shape[0] + 1
+        for i in range(1, max_n):
+            model = KNeighborsClassifier(n_neighbors=i)
+            model.fit(self.X_train, self.y_train)
+            self.model_predicted = model.predict(self.X_test)
+
+            model_acc_score = accuracy_score(self.y_test, self.model_predicted)
+            model_f1_score = f1_score(self.y_test, self.model_predicted)
+            error_rate.append(np.mean(self.model_predicted != self.y_test))
+            accuracy.append(model_acc_score)
+            f1.append(model_f1_score)
+
+        plt.figure(figsize=(20, 12))
+        plt.plot(range(1, max_n), error_rate, color='blue',
+                 markersize=10, label='error rate')
+        plt.plot(range(1, max_n), accuracy, color='magenta',
+                 markersize=10, label='accuracy')
+        plt.plot(range(1, max_n), f1, color='green',
+                 markersize=10, label='f1 score')
+        plt.title('Performance Metrics vs. K Value')
+        plt.xlabel('K')
+        plt.legend(title='Metric')
+        plt.savefig(f'{type(self).__name__}.png')
+        req_k_value = error_rate.index(min(error_rate))+1
+        req_acc_value = accuracy.index(max(accuracy))+1
+        req_f1_value = f1.index(max(f1))+1
+        print("Minimum error:-", min(error_rate), "at K =", req_k_value)
+        print("Maximum acc:-", max(accuracy), "at K =", req_acc_value)
+        print("maximum f1:-", max(f1), "at K =", req_f1_value)
