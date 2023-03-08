@@ -16,31 +16,32 @@ from collections import defaultdict
 
 
 class BaseDataset():
-    # base variables to be overwritten by child class
-    dataset = None
-    predicted_attr = None
-    max_iter = None
-    n_estimators = None
-    random_state = None
-    max_depth = None
-    n_neighbors = None
-    criterion = None
-    positive_outcome = None
-    negative_outcome = None
-    num_repetitions = 5
-    # variables to be used by this main class
-    x_train_list = []
-    x_test_list = []
-    y_train_list = []
-    y_test_list = []
-    predicted_list = []
-    accs = defaultdict(list)
-    f1s = defaultdict(list)
-    models = defaultdict()
 
     def __init__(self) -> None:
+        # base variables to be overwritten by child class
+        self.dataset = None
+        self.predicted_attr = None
+        self.max_iter = None
+        self.n_estimators = None
+        self.random_state = None
+        self.max_depth = None
+        self.n_neighbors = None
+        self.criterion = None
+        self.positive_outcome = None
+        self.negative_outcome = None
+        self.num_repetitions = None
+        # variables to be used by this main class
+        self.x_train_list = []
+        self.x_test_list = []
+        self.y_train_list = []
+        self.y_test_list = []
+        self.predicted_list = []
+        self.accs = defaultdict(list)
+        self.f1s = defaultdict(list)
+        self.models = defaultdict()
         self.ptb = PreTrainingBias()
 
+    def _run(self):
         self.models['Logistic Regression'] = LogisticRegression(
             max_iter=self.max_iter, random_state=self.random_state)
 
@@ -52,8 +53,8 @@ class BaseDataset():
 
         self.models['KNN'] = KNeighborsClassifier(n_neighbors=self.n_neighbors)
 
-    def _run(self):
-        # self._gen_pp_report()
+        self._gen_pp_report()
+
         for i in range(self.num_repetitions):
             self._gen_train_test_sets(i)
             for model_name in self.models:
