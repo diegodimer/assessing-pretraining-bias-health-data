@@ -3,8 +3,9 @@ import pandas as pd
 
 
 class IntersectionalBiasDataset(BaseDataset):
-    def __init__(self):
-        self.dataset = self.custom_preprocessing(
+    def __init__(self, dataset=None):
+        super().__init__()
+        self.dataset = dataset if dataset is not None else self.custom_preprocessing(
             pd.read_csv("datasets/intersectional-bias.csv"))
         self.predicted_attr = "Diagnosis"
         self.max_iter = 1000
@@ -15,7 +16,7 @@ class IntersectionalBiasDataset(BaseDataset):
         self.criterion = 'entropy'
         self.positive_outcome = 0
         self.protected_attr = ['Sex', 'Race']
-        super().__init__()
+        self.num_repetitions = 5
 
     def run(self):
         return super()._run()

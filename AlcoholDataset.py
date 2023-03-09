@@ -3,8 +3,9 @@ import pandas as pd
 
 
 class AlcoholDataset(BaseDataset):
-    def __init__(self):
-        self.dataset = self.custom_preprocessing(
+    def __init__(self, dataset=None):
+        super().__init__()
+        self.dataset = dataset if dataset is not None else self.custom_preprocessing(
             pd.read_csv("datasets/banco_flavia.csv"))
         self.predicted_attr = "phq_diagnosis"
         self.max_iter = 1000
@@ -16,7 +17,7 @@ class AlcoholDataset(BaseDataset):
         self.positive_outcome = 0
         self.negative_outcome = 1
         self.protected_attr = ['gender', 'cotas']
-        super().__init__()
+        self.num_repetitions = 5
 
     def run(self):
         return super()._run()

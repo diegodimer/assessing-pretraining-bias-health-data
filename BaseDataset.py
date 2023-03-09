@@ -30,29 +30,32 @@ class BaseDataset():
         self.positive_outcome = None
         self.negative_outcome = None
         self.num_repetitions = None
+        self.protected_attr = None
         # variables to be used by this main class
         self.x_train_list = []
         self.x_test_list = []
         self.y_train_list = []
         self.y_test_list = []
-        self.predicted_list = []
+        self.predicted_list = defaultdict(list)
+        self.model_conf_matrix = defaultdict(list)
         self.accs = defaultdict(list)
         self.f1s = defaultdict(list)
         self.models = defaultdict()
         self.ptb = PreTrainingBias()
+        self.dropper = False
 
-    def _run(self):
-        self.models['Logistic Regression'] = LogisticRegression(
+    def _init_models(self):
+        self.models['LogisticRegression'] = LogisticRegression(
             max_iter=self.max_iter, random_state=self.random_state)
-
-        self.models['Decision Tree'] = DecisionTreeClassifier(
+        self.models['DecisionTreeClassifier'] = DecisionTreeClassifier(
             criterion='entropy', random_state=self.random_state, max_depth=self.max_depth)
-
-        self.models['Random Forest'] = RandomForestClassifier(
+        self.models['RandomForestClassifier'] = RandomForestClassifier(
             n_estimators=self.n_estimators, random_state=self.random_state, max_depth=self.max_depth)
+        self.models['KNeighborsClassifier'] = KNeighborsClassifier(
+            n_neighbors=self.n_neighbors)
 
-        self.models['KNN'] = KNeighborsClassifier(n_neighbors=self.n_neighbors)
-
+    def execute_models(self):
+        self._init_models()
         self._gen_pp_report()
 
         for i in range(self.num_repetitions):
@@ -70,15 +73,23 @@ class BaseDataset():
             print("{: <30}{: >30.3f}".format(model_name + ' acc', acc_mean))
             print("{: <30}{: >30.3f}".format(model_name + ' f1', f1_mean))
 
-    def _gen_train_test_sets(self, random_state):
+    def _gen_train_test_sets(self, random_state):        
         y = self.dataset[self.predicted_attr]
         X = self.dataset.drop(self.predicted_attr, axis=1)
+        
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X, y, test_size=0.20, random_state=random_state)
+        
+        if self.dropper:
+            self.X_train, self.y_train = self.perturbe(self.X_train, self.y_train)
+        
         self.x_train_list.append(self.X_train)
         self.x_test_list.append(self.X_test)
         self.y_train_list.append(self.y_train)
         self.y_test_list.append(self.y_test)
+    
+    def perturbe(self, X_train, y_train,):
+        raise ("You need to implement the perturbe method")
 
     def _gen_pp_report(self):
         my_file = Path(f"{type(self).__name__}/report.html")
@@ -87,18 +98,20 @@ class BaseDataset():
                 f"{type(self).__name__}/report.html")
 
     def _run_model(self, model):
+        model_name = type(model).__name__
         model.fit(self.X_train, self.y_train)
         model_predicted = model.predict(self.X_test)
-        self.predicted_list.append(model_predicted)
-        # model_conf_matrix = confusion_matrix(self.y_test, self.model_predicted)
+        self.predicted_list[model_name].append(model_predicted)
+        self.model_conf_matrix[model_name].append(
+            confusion_matrix(self.y_test, model_predicted))
         model_acc_score = accuracy_score(
             self.y_test, model_predicted) * 100
         model_f1_score = f1_score(self.y_test, model_predicted) * 100
         return model_acc_score, model_f1_score
 
     def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset=None, cddl_only=False):
-        if dataset is None:
-            dataset = self.dataset
+        dataset = self.dataset if dataset is None else dataset
+
         dic = self.ptb.global_evaluation(
             dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
 
@@ -111,14 +124,11 @@ class BaseDataset():
                 print("{: <30}{: >30.3f}".format(key, dic[key]))
 
     def gen_graph(self, protected_attr=None, labels_labels=None, outcomes_labels=None, dataset=None, predicted_attr=None, file_name=None, df_type=None):
-        if dataset is None:
-            dataset = self.dataset
-        if predicted_attr is None:
-            predicted_attr = self.predicted_attr
-        if protected_attr is None:
-            protected_attr = self.protected_attr
-        if type(protected_attr) == str:
-            protected_attr = [protected_attr]
+        dataset = self.dataset if dataset is None else dataset
+        predicted_attr = self.predicted_attr if predicted_attr is None else predicted_attr
+        protected_attr = self.protected_attr if protected_attr is None else protected_attr
+        protected_attr = [protected_attr] if type(
+            protected_attr) is str else protected_attr
 
         for attr in protected_attr:
             labels = dataset[attr].unique().tolist()
@@ -138,6 +148,7 @@ class BaseDataset():
             width = 0.35
             fig, ax = plt.subplots()
             previous = None
+
             for i, j in enumerate(bar_list):
                 if i == 0:
                     ax.bar(labels, j, width, label=f'{i}')
@@ -146,22 +157,21 @@ class BaseDataset():
                     ax.bar(labels, j, width, label=f'{i}', bottom=previous)
                     previous += np.array(j)
             plt.figure(figsize=(40, 24))
+
             if labels_labels is not None:
                 x_ticks_labels = labels_labels
                 ax.set_xticks(labels)
                 ax.set_xticklabels(x_ticks_labels)
-            if outcomes_labels is not None:
-                ax.legend(outcomes_labels)
-            else:
-                ax.legend(title=predicted_attr)
+
+            ax.legend(outcomes_labels) if outcomes_labels is not None else ax.legend(
+                title=predicted_attr)
+
             ax.set_ylabel('count')
             for bars in ax.containers:  # if the bars should have the values
                 ax.bar_label(bars)
-            if file_name is not None:
-                fig.savefig(f"{type(self).__name__}/{file_name}.png")
-            else:
-                fig.savefig(
-                    f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png")
+
+            fig.savefig(
+                f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png") if file_name is None else fig.savefig(f"{type(self).__name__}/{file_name}.png")
 
     def result_checker(self, repetition_number, labels_labels=None, protected_attr=None):
         df_out = self.x_test_list[repetition_number].reset_index()
