@@ -81,7 +81,7 @@ class BaseDataset():
             X, y, test_size=0.20, random_state=random_state)
         
         if self.dropper:
-            self.X_train, self.y_train = self.perturbe(self.X_train, self.y_train)
+            self.X_train, self.y_train, self.X_test, self.y_test = self.perturbe(self.X_train, self.y_train, self.X_test, self.y_test)
         
         self.x_train_list.append(self.X_train)
         self.x_test_list.append(self.X_test)
