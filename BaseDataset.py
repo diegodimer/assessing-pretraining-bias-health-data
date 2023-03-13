@@ -73,22 +73,23 @@ class BaseDataset():
             print("{: <30}{: >30.3f}".format(model_name + ' acc', acc_mean))
             print("{: <30}{: >30.3f}".format(model_name + ' f1', f1_mean))
 
-    def _gen_train_test_sets(self, random_state):        
+    def _gen_train_test_sets(self, random_state):
         y = self.dataset[self.predicted_attr]
         X = self.dataset.drop(self.predicted_attr, axis=1)
-        
+
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X, y, test_size=0.20, random_state=random_state)
-        
+
         if self.dropper:
-            self.X_train, self.y_train, self.X_test, self.y_test = self.perturbe(self.X_train, self.y_train, self.X_test, self.y_test)
-        
+            self.X_train, self.y_train, self.X_test, self.y_test = self.perturbe(
+                self.X_train, self.y_train, self.X_test, self.y_test)
+
         self.x_train_list.append(self.X_train)
         self.x_test_list.append(self.X_test)
         self.y_train_list.append(self.y_train)
         self.y_test_list.append(self.y_test)
-    
-    def perturbe(self, X_train, y_train,):
+
+    def perturbe(self, X_train, y_train, X_test, y_test):
         raise ("You need to implement the perturbe method")
 
     def _gen_pp_report(self):
@@ -172,6 +173,7 @@ class BaseDataset():
 
             fig.savefig(
                 f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png") if file_name is None else fig.savefig(f"{type(self).__name__}/{file_name}.png")
+            plt.close(fig)
 
     def result_checker(self, repetition_number, labels_labels=None, protected_attr=None):
         df_out = self.x_test_list[repetition_number].reset_index()
