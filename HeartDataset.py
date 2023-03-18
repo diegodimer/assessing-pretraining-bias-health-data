@@ -19,9 +19,6 @@ class HeartDataset(BaseDataset):
         self.protected_attr = ['sex']
         self.num_repetitions = 10
 
-    def run(self):
-        return super().run()
-
     def get_metrics(self):
         df_train = self.X_train.reset_index()
         df_train[self.predicted_attr] = self.y_train.reset_index()[

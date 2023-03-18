@@ -41,30 +41,33 @@ class BaseDataset():
         self.accs = defaultdict(list)
         self.f1s = defaultdict(list)
         self.models = defaultdict()
+        self.estimators = defaultdict(list)
         self.ptb = PreTrainingBias()
         self.dropper = False
+        np.random.seed(42)
 
-    def _init_models(self):
+    def _init_models(self, random_state):
         self.models['LogisticRegression'] = LogisticRegression(
-            max_iter=self.max_iter, random_state=self.random_state)
+            max_iter=self.max_iter, random_state=random_state)
         self.models['DecisionTreeClassifier'] = DecisionTreeClassifier(
-            criterion='entropy', random_state=self.random_state, max_depth=self.max_depth)
+            criterion='entropy', random_state=random_state, max_depth=self.max_depth)
         self.models['RandomForestClassifier'] = RandomForestClassifier(
-            n_estimators=self.n_estimators, random_state=self.random_state, max_depth=self.max_depth)
+            n_estimators=self.n_estimators, random_state=random_state, max_depth=self.max_depth)
         self.models['KNeighborsClassifier'] = KNeighborsClassifier(
             n_neighbors=self.n_neighbors)
 
     def execute_models(self):
-        self._init_models()
         self._gen_pp_report()
+        self._init_models(0)
 
-        for i in range(self.num_repetitions):
+        for i in range(1, self.num_repetitions+1):
             self._gen_train_test_sets(i)
             for model_name in self.models:
                 acc, f1 = self._run_model(self.models[model_name])
                 self.accs[model_name].append(acc)
                 self.f1s[model_name].append(f1)
-
+        acc_return = []
+        f1_return = []
         for model_name in self.accs:
             acc = self.accs[model_name]
             f1 = self.f1s[model_name]
@@ -72,6 +75,9 @@ class BaseDataset():
             f1_mean = (sum(f1)/len(f1))
             print("{: <30}{: >30.3f}".format(model_name + ' acc', acc_mean))
             print("{: <30}{: >30.3f}".format(model_name + ' f1', f1_mean))
+            acc_return.append(acc_mean)
+            f1_return.append(f1_mean)
+        return acc_return, f1_return
 
     def _gen_train_test_sets(self, random_state):
         y = self.dataset[self.predicted_attr]
@@ -81,7 +87,8 @@ class BaseDataset():
             X, y, test_size=0.20, random_state=random_state)
 
         if self.dropper:
-            self.X_train, self.y_train = self.perturbe(self.X_train, self.y_train)
+            self.X_train, self.y_train = self.perturbe(
+                self.X_train, self.y_train)
 
         self.x_train_list.append(self.X_train)
         self.x_test_list.append(self.X_test)
@@ -100,6 +107,12 @@ class BaseDataset():
     def _run_model(self, model):
         model_name = type(model).__name__
         model.fit(self.X_train, self.y_train)
+        if (type(model).__name__ == "RandomForestClassifier"):
+            for i in model.estimators_:
+                self.estimators["RandomForestClassifier"].append(i)
+        else:
+            self.estimators[type(model).__name__].append(model)
+
         model_predicted = model.predict(self.X_test)
         self.predicted_list[model_name].append(model_predicted)
         self.model_conf_matrix[model_name].append(
@@ -123,7 +136,7 @@ class BaseDataset():
             else:
                 print("{: <30}{: >30.3f}".format(key, dic[key]))
 
-    def gen_graph(self, protected_attr=None, labels_labels=None, outcomes_labels=None, dataset=None, predicted_attr=None, file_name=None, df_type=None):
+    def gen_graph(self, protected_attr=None, labels_labels=None, outcomes_labels=None, dataset=None, predicted_attr=None, file_name=None, df_type=None, graph_title=None, ax=None):
         dataset = self.dataset if dataset is None else dataset
         predicted_attr = self.predicted_attr if predicted_attr is None else predicted_attr
         protected_attr = self.protected_attr if protected_attr is None else protected_attr
@@ -146,7 +159,11 @@ class BaseDataset():
 
             # the width of the bars: can also be len(x) sequence
             width = 0.35
-            fig, ax = plt.subplots()
+            fig = None
+            if ax is None:
+                fig, ax = plt.subplots()
+                plt.figure(figsize=(40, 24))
+
             previous = None
 
             for i, j in enumerate(bar_list):
@@ -156,7 +173,6 @@ class BaseDataset():
                 if i != 0:
                     ax.bar(labels, j, width, label=f'{i}', bottom=previous)
                     previous += np.array(j)
-            plt.figure(figsize=(40, 24))
 
             if labels_labels is not None:
                 x_ticks_labels = labels_labels
@@ -166,13 +182,16 @@ class BaseDataset():
             ax.legend(outcomes_labels) if outcomes_labels is not None else ax.legend(
                 title=predicted_attr)
 
+            if graph_title is not None:
+                ax.set_title(graph_title)
+
             ax.set_ylabel('count')
             for bars in ax.containers:  # if the bars should have the values
                 ax.bar_label(bars)
-
-            fig.savefig(
-                f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png") if file_name is None else fig.savefig(f"{type(self).__name__}/{file_name}.png")
-            plt.close()
+            if fig is not None:
+                fig.savefig(
+                    f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png") if file_name is None else fig.savefig(f"{type(self).__name__}/{file_name}.png")
+                plt.close(fig)
 
     def result_checker(self, repetition_number, labels_labels=None, protected_attr=None):
         df_out = self.x_test_list[repetition_number].reset_index()
@@ -215,7 +234,7 @@ class BaseDataset():
         accuracy = []
         f1 = []
         error_rate = []
-        max_n = self.X_train.shape[0] + 1
+        max_n = round((self.X_train.shape[0] + 1) / 4)
         for i in range(1, max_n):
             model = KNeighborsClassifier(n_neighbors=i)
             model.fit(self.X_train, self.y_train)
