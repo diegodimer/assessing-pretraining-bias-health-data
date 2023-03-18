@@ -1,9 +1,12 @@
 from BaseDataset import BaseDataset
 import pandas as pd
 
+
 class AlcoholDataset(BaseDataset):
-    def __init__(self):
-        self.dataset = self.custom_preprocessing(pd.read_csv("datasets/banco_flavia.csv"))
+    def __init__(self, dataset=None):
+        super().__init__()
+        self.dataset = dataset if dataset is not None else self.custom_preprocessing(
+            pd.read_csv("datasets/banco_flavia.csv"))
         self.predicted_attr = "phq_diagnosis"
         self.max_iter = 1000
         self.n_estimators = 40
@@ -14,29 +17,30 @@ class AlcoholDataset(BaseDataset):
         self.positive_outcome = 0
         self.negative_outcome = 1
         self.protected_attr = ['gender', 'cotas']
-        super().__init__()
-        
+        self.num_repetitions = 5
+
     def run(self):
         return super()._run()
 
     def custom_preprocessing(self, df):
 
-        def marital_status(status): # maps single, single in a relationship, widow, divorced -> single
-            if status == 3: 
+        # maps single, single in a relationship, widow, divorced -> single
+        def marital_status(status):
+            if status == 3:
                 return 1
-            else: # single
+            else:  # single
                 return 0
-        
+
         def children(num):
             if num == 1:
                 return 0
             elif num >= 2:
                 return 1
-            else: 
+            else:
                 raise
 
-        df = df.drop('year', axis=1) 
-        df = df.drop('gender_id', axis=1) 
+        df = df.drop('year', axis=1)
+        df = df.drop('gender_id', axis=1)
         df = df.drop('alcohol_dose', axis=1)
         df = df.drop('alcohol_binge', axis=1)
         df = df.drop('Audit_Total', axis=1)
@@ -50,14 +54,16 @@ class AlcoholDataset(BaseDataset):
         df = df.drop('bullying_yes', axis=1)
         df = df.drop('family_income', axis=1)
         df = df.drop_duplicates()
-        df['marital_status'] = df['marital_status'].apply(lambda x: marital_status(x))
+        df['marital_status'] = df['marital_status'].apply(
+            lambda x: marital_status(x))
         df['children'] = df['children'].apply(lambda x: children(x))
-    
+
         return df
 
     def get_metrics(self):
         df_train = self.X_train.reset_index()
-        df_train[self.predicted_attr] = self.y_train.reset_index()[self.predicted_attr]
+        df_train[self.predicted_attr] = self.y_train.reset_index()[
+            self.predicted_attr]
         h.evaluate_metrics('gender', 2, 'Sleep', df_train)
         h.evaluate_metrics('gender', 2, 'change_giveup', df_train, True)
         h.evaluate_metrics('cotas', 1, 'change_giveup', df_train, True)
@@ -66,8 +72,3 @@ class AlcoholDataset(BaseDataset):
 
 h = AlcoholDataset()
 h.run()
-h.get_metrics()
-# h.evaluate_metrics('gender', 2, 'Sleep')
-# h.evaluate_metrics('gender', 2, 'change_giveup')
-# h.evaluate_metrics('cotas', 1, 'change_giveup')
-# h.evaluate_metrics('cotas', 1, 'Sleep')
