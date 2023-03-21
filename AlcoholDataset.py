@@ -16,11 +16,9 @@ class AlcoholDataset(BaseDataset):
         self.criterion = 'entropy'
         self.positive_outcome = 0
         self.negative_outcome = 1
-        self.protected_attr = ['gender', 'cotas']
-        self.num_repetitions = 5
-
-    def run(self):
-        return super()._run()
+        self.protected_attr = ['gender', 'age>18']
+        self.num_repetitions = 6
+        self.protected_attr_mappings = {'gender': {"Women": 0, "Men": 1}, 'age>18': {"Students under 18 yo": 0, "Students over 18 yo": 1}}
 
     def custom_preprocessing(self, df):
 
@@ -38,6 +36,10 @@ class AlcoholDataset(BaseDataset):
                 return 1
             else:
                 raise
+
+        def gender(gender):
+            return gender-1
+
 
         df = df.drop('year', axis=1)
         df = df.drop('gender_id', axis=1)
@@ -57,18 +59,18 @@ class AlcoholDataset(BaseDataset):
         df['marital_status'] = df['marital_status'].apply(
             lambda x: marital_status(x))
         df['children'] = df['children'].apply(lambda x: children(x))
+        df['gender'] = df['gender'].apply(lambda x: gender(x))
 
         return df
 
-    def get_metrics(self):
-        df_train = self.X_train.reset_index()
-        df_train[self.predicted_attr] = self.y_train.reset_index()[
-            self.predicted_attr]
-        h.evaluate_metrics('gender', 2, 'Sleep', df_train)
-        h.evaluate_metrics('gender', 2, 'change_giveup', df_train, True)
-        h.evaluate_metrics('cotas', 1, 'change_giveup', df_train, True)
-        h.evaluate_metrics('cotas', 1, 'Sleep', df_train, True)
+    def get_metrics(self, df_train, print_metrics=True):
+        self.stratify_age(df_train)
+        d = self.evaluate_metrics('gender', 1, 'change_giveup', df_train, print_metrics=print_metrics)
+        # d.update(self.evaluate_metrics(
+        #     'cotas', 0, 'change_giveup', df_train, print_metrics=print_metrics))
+        d.update(self.evaluate_metrics(
+            'age>18', 1, 'change_giveup', df_train, print_metrics=print_metrics))
+        return d
 
-
-h = AlcoholDataset()
-h.run()
+    def stratify_age(self, df):
+        df['age>18'] = (df['age'] > 18).astype(int)

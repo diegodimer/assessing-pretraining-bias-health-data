@@ -12,14 +12,11 @@ class IntersectionalBiasDataset(BaseDataset):
         self.n_estimators = 20
         self.random_state = 12
         self.max_depth = 10
-        self.n_neighbors = 39
+        self.n_neighbors = 318
         self.criterion = 'entropy'
         self.positive_outcome = 0
         self.protected_attr = ['Sex', 'Race']
         self.num_repetitions = 5
-
-    def run(self):
-        return super()._run()
 
     def custom_preprocessing(self, df):
         def discretize_sex(x):
@@ -65,16 +62,9 @@ class IntersectionalBiasDataset(BaseDataset):
 
         return df
 
-    def get_metrics(self):
-        df_train = self.X_train.reset_index()
-        df_train[self.predicted_attr] = self.y_train.reset_index()[
-            self.predicted_attr]
-        h.evaluate_metrics('Sex', 1, 'Rumination', df_train)
-        h.evaluate_metrics('Sex', 1, 'Tension', df_train, True)
-        h.evaluate_metrics('Race', 1, 'Rumination', df_train, True)
-        h.evaluate_metrics('Race', 1, 'Tension', df_train, True)
-
-
-h = IntersectionalBiasDataset()
-h.run()
-h.get_metrics()
+    def get_metrics(self, df_train):
+        d = self.evaluate_metrics('Sex', 1, 'Rumination', df_train)
+        d.update(self.evaluate_metrics('Sex', 1, 'Tension', df_train, True))
+        d.update(self.evaluate_metrics('Race', 1, 'Rumination', df_train, True))
+        d.update(self.evaluate_metrics('Race', 1, 'Tension', df_train, True))
+        return d

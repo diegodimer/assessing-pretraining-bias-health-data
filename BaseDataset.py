@@ -122,19 +122,24 @@ class BaseDataset():
         model_f1_score = f1_score(self.y_test, model_predicted) * 100
         return model_acc_score, model_f1_score
 
-    def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset=None, cddl_only=False):
+    def evaluate_metrics(self, protected_attribute, privileged_group, group_variable, dataset=None, cddl_only=False, print_metrics=True):
         dataset = self.dataset if dataset is None else dataset
 
         dic = self.ptb.global_evaluation(
             dataset, self.predicted_attr, self.positive_outcome, protected_attribute, privileged_group, group_variable)
-
+        out_dic = {}
         for key in dic:
             if cddl_only:
                 if 'CDDL' in key:
-                    print("{: <30}{: >30.3f}".format(key, dic[key]))
+                    if print_metrics:
+                        print("{: <30}{: >30.3f}".format(key, dic[key]))
+                    out_dic[key] = dic[key]
                     break
             else:
-                print("{: <30}{: >30.3f}".format(key, dic[key]))
+                if print_metrics:
+                    print("{: <30}{: >30.3f}".format(key, dic[key]))
+                out_dic[key] = dic[key]
+        return out_dic
 
     def gen_graph(self, protected_attr=None, labels_labels=None, outcomes_labels=None, dataset=None, predicted_attr=None, file_name=None, df_type=None, graph_title=None, ax=None):
         dataset = self.dataset if dataset is None else dataset
@@ -190,7 +195,7 @@ class BaseDataset():
                 ax.bar_label(bars)
             if fig is not None:
                 fig.savefig(
-                    f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png") if file_name is None else fig.savefig(f"{type(self).__name__}/{file_name}.png")
+                    f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png".replace(">", "")) if file_name is None else fig.savefig(f"{type(self).__name__}/{file_name}.png".replace(">", ""))
                 plt.close(fig)
 
     def result_checker(self, repetition_number, labels_labels=None, protected_attr=None):
@@ -256,7 +261,7 @@ class BaseDataset():
         plt.title('Performance Metrics vs. K Value')
         plt.xlabel('K')
         plt.legend(title='Metric')
-        plt.savefig(f'{type(self).__name__}.png')
+        plt.savefig(f'{type(self).__name__}.png'.replace(">", ""))
         req_k_value = error_rate.index(min(error_rate))+1
         req_acc_value = accuracy.index(max(accuracy))+1
         req_f1_value = f1.index(max(f1))+1

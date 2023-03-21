@@ -19,9 +19,7 @@ class HeartDataset(BaseDataset):
         self.protected_attr = ['sex']
         self.num_repetitions = 10
 
-    def get_metrics(self):
-        df_train = self.X_train.reset_index()
-        df_train[self.predicted_attr] = self.y_train.reset_index()[
-            self.predicted_attr]
-        self.evaluate_metrics('sex', 1, 'cp', df_train)
-        self.evaluate_metrics('sex', 1, 'thal', df_train, True)
+    def get_metrics(self, df_train):
+        d = self.evaluate_metrics('sex', 1, 'cp', df_train)
+        d.update(self.evaluate_metrics('sex', 1, 'thal', df_train, True))
+        return d
