@@ -87,6 +87,7 @@ def remove_instances(x, conditions, value):
 
 
 def generate_pies(h, name, full_dataset_test):
+    avg_acc = defaultdict(list)
     d = defaultdict(lambda: defaultdict(dict))
     d_wrongs = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
     d_correct = defaultdict(lambda: defaultdict(dict))
@@ -107,7 +108,7 @@ def generate_pies(h, name, full_dataset_test):
                     full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == 0) & (full_dataset_test[model] == 1)])
                 d_correct[attr][model][f"{val} predicted correctly"] = len(full_dataset_test.loc[(
                     full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[model] == full_dataset_test[h.predicted_attr])])
-
+                avg_acc[val].append( (d_wrongs[attr][val][model][f"{val} predicted correctly"]) / (len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val])])))
     for attr in d.keys():
         generate_model_pies(h, name, d[attr], f"piechart-complete-{attr}")
 
@@ -119,7 +120,8 @@ def generate_pies(h, name, full_dataset_test):
     for attr in d_correct.keys():
         generate_model_pies(
             h, name, d_correct[attr], f"piechart-correct-{attr}")
-
+    for key in avg_acc:
+        print(f"avg {key} acc: { round(((sum(avg_acc[key]))/ (len(avg_acc[key]))*100 ),3)}")
 
 def evaluate_train_and_test_sets(h, name, stratify_age=False):
     gs_test = {attr: gridspec.GridSpec(

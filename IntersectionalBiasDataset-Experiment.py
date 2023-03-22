@@ -175,3 +175,12 @@ for i in range(4):
     print(" & {: >2.3f} & {: >2.3f} & {: >2.3f}  ".format(
         all_f1s[i], all_f1s[i+4], all_f1s[i+8]), end="")
     print("\n")
+print("avg acc (all models)")
+for i in range(3):
+    idx = i*4
+    print(round(sum(all_acs[idx:idx+4])/4, 3))
+
+print("avg f1 (all models)")
+for i in range(3):
+    idx = i*4
+    print(round(sum(all_f1s[idx:idx+4])/4, 3))
