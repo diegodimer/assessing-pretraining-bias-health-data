@@ -10,12 +10,12 @@ from experiment_utils import feature_importante, generate_pies, remove_instances
 def gen_graph_for_sets(h: AlcoholDataset, name: str):
     full_dataset_test = get_full_sets_graphs(h, name, stratify_age=True)
     generate_pies(h, name, full_dataset_test)
-    metrics_all = evaluate_train_and_test_sets(h, name, stratify_age=True)
+    evaluate_train_and_test_sets(h, name, stratify_age=True)
 
-    fig1, ax1 = plt.subplots()
-    ax1.set_title('Box Plot for Metric Values')
-    pd.DataFrame(metrics_all).boxplot(ax=ax1, rot=45)
-    fig1.savefig("boxplot-metrics.png")
+    # fig1, ax1 = plt.subplots()
+    # ax1.set_title('Box Plot for Metric Values')
+    # pd.DataFrame(metrics_all).boxplot(ax=ax1, rot=45)
+    # fig1.savefig("boxplot-metrics.png")
     plt.close('all')
 
     feature_importante(name, h)
@@ -39,8 +39,10 @@ def high_imbalance_gender():
         new_x_train[h.predicted_attr] = y_train.reset_index()[
             h.predicted_attr]
 
-        new_x_train = remove_instances(new_x_train, [new_x_train['gender'] == 0, new_x_train['phq_diagnosis'] == 0], 0.99)
-        new_x_train = remove_instances(new_x_train, [new_x_train['gender'] == 0, new_x_train['phq_diagnosis'] == 1], 0.91)
+        new_x_train = remove_instances(
+            new_x_train, [new_x_train['gender'] == 0, new_x_train['phq_diagnosis'] == 0], 0.99)
+        new_x_train = remove_instances(
+            new_x_train, [new_x_train['gender'] == 0, new_x_train['phq_diagnosis'] == 1], 0.91)
         new_y_train = new_x_train[h.predicted_attr]
         new_x_train = new_x_train.drop(h.predicted_attr, axis=1)
         new_x_train = new_x_train.drop('index', axis=1)
@@ -59,6 +61,7 @@ def high_imbalance_gender():
     all_f1s += f1
 
     gen_graph_for_sets(h, "high-imbalance-gender")
+
 
 def high_imbalance_age():
     def perturbe(X_train, y_train):
@@ -95,7 +98,8 @@ def high_imbalance_age():
         #                 if d['CDDL (age>18, change_giveup)'] > best_CDDL:
         #                     best_CDDL = d['CDDL (age>18, change_giveup)']
         #                     best_cddl_val = [i,j, k, l]
-        new_x_train = remove_instances(new_x_train, [new_x_train['age>18'] == 1, new_x_train['phq_diagnosis'] == 1], 0.95)
+        new_x_train = remove_instances(
+            new_x_train, [new_x_train['age>18'] == 1, new_x_train['phq_diagnosis'] == 1], 0.95)
         # new_x_train = remove_instances(new_x_train, [new_x_train['age>18'] == 1, new_x_train['phq_diagnosis'] == 1], 0.9)
         new_y_train = new_x_train[h.predicted_attr]
         new_x_train = new_x_train.drop(h.predicted_attr, axis=1)
@@ -124,7 +128,7 @@ def equal_balance():
         new_x_train[h.predicted_attr] = y_train.reset_index()[
             h.predicted_attr]
         h.stratify_age(new_x_train)
-
+        # this is way more optimized in IntersectionalBiasDataset.py
         var11 = len(new_x_train.loc[(new_x_train['gender'] == 0) & (
             new_x_train['age>18'] == 0) & (new_x_train['phq_diagnosis'] == 0)])
         var12 = len(new_x_train.loc[(new_x_train['gender'] == 1) & (

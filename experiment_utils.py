@@ -85,6 +85,7 @@ def remove_instances(x, conditions, value):
     new_xtrain = x.drop(drop_indices)
     return new_xtrain
 
+
 def generate_pies(h, name, full_dataset_test):
     d = defaultdict(lambda: defaultdict(dict))
     d_wrongs = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
@@ -92,32 +93,44 @@ def generate_pies(h, name, full_dataset_test):
     for attr in h.protected_attr_mappings.keys():
         for val in h.protected_attr_mappings[attr].keys():
             for model in h.models:
-                d[attr][model][f"{val} predicted correctly"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[model] == full_dataset_test[h.predicted_attr])])
-                d[attr][model][f"{val} false positive"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == 0) & (full_dataset_test[model] == 1)])
-                d[attr][model][f"{val} false negative"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == 1) & (full_dataset_test[model] == 0)])
-                d_wrongs[attr][val][model][f"{val} predicted correctly"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == full_dataset_test[model])])
-                d_wrongs[attr][val][model][f"{val} false negative"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == 1) & (full_dataset_test[model] == 0)])
-                d_wrongs[attr][val][model][f"{val} false positive"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == 0) & (full_dataset_test[model] == 1)])
-                d_correct[attr][model][f"{val} predicted correctly"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[model] == full_dataset_test[h.predicted_attr])])
-                
+                d[attr][model][f"{val} predicted correctly"] = len(full_dataset_test.loc[(
+                    full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[model] == full_dataset_test[h.predicted_attr])])
+                d[attr][model][f"{val} false positive"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (
+                    full_dataset_test[h.predicted_attr] == 0) & (full_dataset_test[model] == 1)])
+                d[attr][model][f"{val} false negative"] = len(full_dataset_test.loc[(full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (
+                    full_dataset_test[h.predicted_attr] == 1) & (full_dataset_test[model] == 0)])
+                d_wrongs[attr][val][model][f"{val} predicted correctly"] = len(full_dataset_test.loc[(
+                    full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == full_dataset_test[model])])
+                d_wrongs[attr][val][model][f"{val} false negative"] = len(full_dataset_test.loc[(
+                    full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == 1) & (full_dataset_test[model] == 0)])
+                d_wrongs[attr][val][model][f"{val} false positive"] = len(full_dataset_test.loc[(
+                    full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[h.predicted_attr] == 0) & (full_dataset_test[model] == 1)])
+                d_correct[attr][model][f"{val} predicted correctly"] = len(full_dataset_test.loc[(
+                    full_dataset_test[attr] == h.protected_attr_mappings[attr][val]) & (full_dataset_test[model] == full_dataset_test[h.predicted_attr])])
+
     for attr in d.keys():
-            generate_model_pies(h, name, d[attr], f"piechart-complete-{attr}")
-    
+        generate_model_pies(h, name, d[attr], f"piechart-complete-{attr}")
+
     for attr in d_wrongs.keys():
         for val in d_wrongs[attr].keys():
-            generate_model_pies(h, name, d_wrongs[attr][val], f"piechart-wrong-{val}")
-    
+            generate_model_pies(
+                h, name, d_wrongs[attr][val], f"piechart-wrong-{val}")
+
     for attr in d_correct.keys():
-        generate_model_pies(h, name, d_correct[attr], f"piechart-correct-{attr}")
+        generate_model_pies(
+            h, name, d_correct[attr], f"piechart-correct-{attr}")
 
 
 def evaluate_train_and_test_sets(h, name, stratify_age=False):
-    metrics_all = defaultdict(list)
-    gs_test = {attr: gridspec.GridSpec(round(h.num_repetitions/2), 2) for attr in h.protected_attr}
-    gs_train = {attr: gridspec.GridSpec(round(h.num_repetitions/2), 2) for attr in h.protected_attr}
-    fig_testSets = {attr: (plt.figure(figsize=(10, 20))) for attr in h.protected_attr}
-    fig_trainSets = {attr: (plt.figure(figsize=(10, 20))) for attr in h.protected_attr}
-    
+    gs_test = {attr: gridspec.GridSpec(
+        round(h.num_repetitions/2), 2) for attr in h.protected_attr}
+    gs_train = {attr: gridspec.GridSpec(
+        round(h.num_repetitions/2), 2) for attr in h.protected_attr}
+    fig_testSets = {attr: (plt.figure(figsize=(10, 20)))
+                    for attr in h.protected_attr}
+    fig_trainSets = {attr: (plt.figure(figsize=(10, 20)))
+                     for attr in h.protected_attr}
+
     for attr in h.protected_attr:
         for i in range(h.num_repetitions):
             train_set = h.x_train_list[i].reset_index()
@@ -135,12 +148,13 @@ def evaluate_train_and_test_sets(h, name, stratify_age=False):
             # h.gen_graph(dataset=train_set, file_name=f"{name}/{i}-train", graph_title=f"Train set #{i}", labels_labels=["Female", "Male"], ax=ax)
             # ax = fig.add_subplot(gs[1])
             # h.gen_graph(dataset=test_set, file_name=f"{name}/{i}-test", graph_title=f"Test set #{i}", labels_labels=["Female", "Male"], ax=ax)
-            f = h.get_metrics(train_set, print_metrics=False)
-            for t in f.keys():
-                metrics_all[t].append(f[t])
+            # f = h.get_metrics(train_set, print_metrics=False)
+            # for t in f.keys():
+            #     metrics_all[t].append(f[t])
             if stratify_age:
                 h.stratify_age(test_set)
-            
+                h.stratify_age(train_set)
+
             ax = fig_testSets[attr].add_subplot(gs_test[attr][i])
             h.gen_graph(dataset=test_set, file_name=f"{name}/{i}-test",
                         graph_title=f"Test set #{i}", labels_labels=h.protected_attr_mappings[attr].keys(), ax=ax, protected_attr=attr)
@@ -149,9 +163,10 @@ def evaluate_train_and_test_sets(h, name, stratify_age=False):
             h.gen_graph(dataset=train_set, file_name=f"{name}/{i}-test",
                         graph_title=f"Train set #{i}", labels_labels=h.protected_attr_mappings[attr].keys(), ax=ax2, protected_attr=attr)
 
-        fig_testSets[attr].savefig(f"{type(h).__name__}/{name}/testSetsGrouped-{attr}.png".replace(">", ""))
-        fig_trainSets[attr].savefig(f"{type(h).__name__}/{name}/trainSetsGrouped-{attr}.png".replace(">", ""))
-    return metrics_all
+        fig_testSets[attr].savefig(
+            f"{type(h).__name__}/{name}/testSetsGrouped-{attr}.png".replace(">", ""))
+        fig_trainSets[attr].savefig(
+            f"{type(h).__name__}/{name}/trainSetsGrouped-{attr}.png".replace(">", ""))
 
 
 def get_full_sets_graphs(h, name, stratify_age=False):
@@ -177,25 +192,28 @@ def get_full_sets_graphs(h, name, stratify_age=False):
     print(
         f"\nMetrics calculated over the train datasets (concatenanted from all {h.num_repetitions} repetitions)")
     h.get_metrics(full_dataset_train)
-    if(stratify_age):
+    if (stratify_age):
         h.stratify_age(full_dataset_test)
 
-    
     fig, ax = plt.subplots()
     total_size = len(full_dataset_test)
     right = []
     wrong = []
     labels = list(h.models)
     for p in labels:
-        right.append((len(full_dataset_test.loc[(full_dataset_test[p] == full_dataset_test[h.predicted_attr])])/total_size) * 100.0)
-        wrong.append((len(full_dataset_test.loc[(full_dataset_test[p] != full_dataset_test[h.predicted_attr])])/total_size) * 100.0)
-    
+        right.append((len(full_dataset_test.loc[(
+            full_dataset_test[p] == full_dataset_test[h.predicted_attr])])/total_size) * 100.0)
+        wrong.append((len(full_dataset_test.loc[(
+            full_dataset_test[p] != full_dataset_test[h.predicted_attr])])/total_size) * 100.0)
+
     df = pd.DataFrame({'correct': right, 'wrong': wrong}, index=labels)
     ax = df.plot.barh(ax=ax, color=['green', 'red'])
     ax.legend()
     for bars in ax.containers:  # if the bars should have the values
-        plt.bar_label(bars, labels=[f'{x:,.2f}%' for x in bars.datavalues], label_type='center')
-    fig.savefig(f"{type(h).__name__}/{name}/FullTest-Predictions.png".replace(">", ""))
+        plt.bar_label(
+            bars, labels=[f'{x:,.2f}%' for x in bars.datavalues], label_type='center')
+    fig.savefig(
+        f"{type(h).__name__}/{name}/FullTest-Predictions.png".replace(">", ""))
     plt.close(fig)
 
     # GENERATE GRAPHS FOR FULL TRAINING AND TEST DATA
@@ -204,5 +222,5 @@ def get_full_sets_graphs(h, name, stratify_age=False):
                     dataset=full_dataset_train, labels_labels=list(h.protected_attr_mappings[attr].keys()), graph_title="Complete train set")
         h.gen_graph(attr, df_type=f'{name}/FulltestDataset-{attr}',
                     dataset=full_dataset_test, labels_labels=list(h.protected_attr_mappings[attr].keys()), graph_title="Complete test set")
-                    
+
     return full_dataset_test

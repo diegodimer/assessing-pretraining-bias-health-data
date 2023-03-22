@@ -112,7 +112,8 @@ def gen_graph_for_sets(h: HeartDataset, name: str):
         f = h.evaluate_metrics('sex', 1, 'cp', dataset=train_set)
         for t in f.keys():
             metrics_all[t].append(f[t])
-        g = h.evaluate_metrics('sex', 1, 'thal', cddl_only=True, dataset=train_set)
+        g = h.evaluate_metrics(
+            'sex', 1, 'thal', cddl_only=True, dataset=train_set)
         for t in g.keys():
             metrics_all[t].append(g[t])
         ax = fig_testSets.add_subplot(gs_test[i])
@@ -140,7 +141,7 @@ def gen_graph_for_sets(h: HeartDataset, name: str):
 
     fig_testSets.savefig(f"{type(h).__name__}/{name}/testSetsGrouped.png")
     fig_trainSets.savefig(f"{type(h).__name__}/{name}/trainSetsGrouped.png")
-    
+
     fig1, ax1 = plt.subplots()
     ax1.set_title('Box Plot for Metric Values')
     pd.DataFrame(metrics_all).boxplot(ax=ax1, rot=45)

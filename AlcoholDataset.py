@@ -18,7 +18,8 @@ class AlcoholDataset(BaseDataset):
         self.negative_outcome = 1
         self.protected_attr = ['gender', 'age>18']
         self.num_repetitions = 6
-        self.protected_attr_mappings = {'gender': {"Women": 0, "Men": 1}, 'age>18': {"Students under 18 yo": 0, "Students over 18 yo": 1}}
+        self.protected_attr_mappings = {'gender': {"Women": 0, "Men": 1}, 'age>18': {
+            "Students under 18 yo": 0, "Students over 18 yo": 1}}
 
     def custom_preprocessing(self, df):
 
@@ -39,7 +40,6 @@ class AlcoholDataset(BaseDataset):
 
         def gender(gender):
             return gender-1
-
 
         df = df.drop('year', axis=1)
         df = df.drop('gender_id', axis=1)
@@ -65,7 +65,8 @@ class AlcoholDataset(BaseDataset):
 
     def get_metrics(self, df_train, print_metrics=True):
         self.stratify_age(df_train)
-        d = self.evaluate_metrics('gender', 1, 'change_giveup', df_train, print_metrics=print_metrics)
+        d = self.evaluate_metrics(
+            'gender', 1, 'change_giveup', df_train, print_metrics=print_metrics)
         # d.update(self.evaluate_metrics(
         #     'cotas', 0, 'change_giveup', df_train, print_metrics=print_metrics))
         d.update(self.evaluate_metrics(
