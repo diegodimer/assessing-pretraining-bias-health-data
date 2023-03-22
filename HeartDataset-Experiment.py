@@ -1,3 +1,4 @@
+from collections import defaultdict
 from HeartDataset import HeartDataset
 import pandas as pd
 import numpy as np
@@ -87,7 +88,7 @@ def gen_graph_for_sets(h: HeartDataset, name: str):
     generate_pie(h, name, full_dataset_test, d_wrongs, "wrongs-pie")
     generate_pie(h, name, full_dataset_test, d_female, "female-pie")
     generate_pie(h, name, full_dataset_test, d_male, "male-pie")
-
+    metrics_all = defaultdict(list)
     gs_test = gridspec.GridSpec(5, 2)
     gs_train = gridspec.GridSpec(5, 2)
     fig_testSets = plt.figure(figsize=(10, 20))
@@ -108,7 +109,13 @@ def gen_graph_for_sets(h: HeartDataset, name: str):
         # h.gen_graph(dataset=train_set, file_name=f"{name}/{i}-train", graph_title=f"Train set #{i}", labels_labels=["Female", "Male"], ax=ax)
         # ax = fig.add_subplot(gs[1])
         # h.gen_graph(dataset=test_set, file_name=f"{name}/{i}-test", graph_title=f"Test set #{i}", labels_labels=["Female", "Male"], ax=ax)
-
+        f = h.evaluate_metrics('sex', 1, 'cp', dataset=train_set)
+        for t in f.keys():
+            metrics_all[t].append(f[t])
+        g = h.evaluate_metrics(
+            'sex', 1, 'thal', cddl_only=True, dataset=train_set)
+        for t in g.keys():
+            metrics_all[t].append(g[t])
         ax = fig_testSets.add_subplot(gs_test[i])
         h.gen_graph(dataset=test_set, file_name=f"{name}/{i}-test",
                     graph_title=f"Test set #{i}", labels_labels=["Female", "Male"], ax=ax)
@@ -134,6 +141,11 @@ def gen_graph_for_sets(h: HeartDataset, name: str):
 
     fig_testSets.savefig(f"{type(h).__name__}/{name}/testSetsGrouped.png")
     fig_trainSets.savefig(f"{type(h).__name__}/{name}/trainSetsGrouped.png")
+
+    fig1, ax1 = plt.subplots()
+    ax1.set_title('Box Plot for Metric Values')
+    pd.DataFrame(metrics_all).boxplot(ax=ax1, rot=45)
+    fig1.savefig("boxplot-metrics.png")
     plt.close('all')
     feature_importante(name, h)
 
@@ -270,14 +282,14 @@ def equal_balance():
 all_acs = []
 all_f1s = []
 original_dataset()
-high_imbalance()
-equal_balance()
-for i in range(4):
-    print(" & {: >2.3f} & {: >2.3f} & {: >2.3f} ".format(
-        all_acs[i], all_acs[i+4], all_acs[i+8]), end="")
-    print("\n")
-print("\n====")
-for i in range(4):
-    print(" & {: >2.3f} & {: >2.3f} & {: >2.3f} ".format(
-        all_f1s[i], all_f1s[i+4], all_f1s[i+8]), end="")
-    print("\n")
+# high_imbalance()
+# equal_balance()
+# for i in range(4):
+#     print(" & {: >2.3f} & {: >2.3f} & {: >2.3f} ".format(
+#         all_acs[i], all_acs[i+4], all_acs[i+8]), end="")
+#     print("\n")
+# print("\n====")
+# for i in range(4):
+#     print(" & {: >2.3f} & {: >2.3f} & {: >2.3f} ".format(
+#         all_f1s[i], all_f1s[i+4], all_f1s[i+8]), end="")
+#     print("\n")
