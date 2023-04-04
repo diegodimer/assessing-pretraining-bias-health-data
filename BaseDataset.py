@@ -198,28 +198,6 @@ class BaseDataset():
                     f"{type(self).__name__}/{df_type}-{predicted_attr}-{attr}.png".replace(">", "")) if file_name is None else fig.savefig(f"{type(self).__name__}/{file_name}.png".replace(">", ""))
                 plt.close(fig)
 
-    def result_checker(self, repetition_number, labels_labels=None, protected_attr=None):
-        df_out = self.x_test_list[repetition_number].reset_index()
-        y_hats = pd.DataFrame(self.predicted_list[repetition_number])
-        df_out["Actual"] = self.y_test_list[repetition_number].reset_index()[
-            self.predicted_attr]
-        df_out["Prediction"] = y_hats.reset_index()[0]
-
-        if protected_attr is None:
-            protected_attr = self.protected_attr
-
-        for i in self.protected_attr:
-            self.gen_graph(i, dataset=df_out, predicted_attr='Actual',
-                           labels_labels=labels_labels, df_type=f'testSet-{repetition_number}')
-
-            df_err = df_out.loc[df_out['Actual'] != df_out['Prediction']]
-            self.gen_graph(i, dataset=df_err, predicted_attr='Prediction',
-                           labels_labels=labels_labels, df_type=f'error-{repetition_number}')
-
-            df_corr = df_out.loc[df_out['Actual'] == df_out['Prediction']]
-            self.gen_graph(i, dataset=df_corr, predicted_attr='Prediction',
-                           labels_labels=labels_labels, df_type=f'correct-{repetition_number}')
-
     def save_tree(self):
         dot_data = tree.export_graphviz(self.models['Decision Tree'], out_file=None,
                                         feature_names=self.X_train.columns,
