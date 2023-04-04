@@ -16,10 +16,8 @@ This code was used in the work presented for the partial fulfillment of the requ
 ```
 @monography{tcc_diego,
 author={Diego Dimer Rodrigues},
-title={Assessing pre-training bias in Health data
-and estimating its impact on machine
-learning algorithms}, 
-school={Universidade Federal do Rio Grande do Sul}, 
+title={Assessing pre-training bias in Health data and estimating its impact on machine learning algorithms},
+school={Universidade Federal do Rio Grande do Sul},
 year={2023},
 type={TCC}
 }
